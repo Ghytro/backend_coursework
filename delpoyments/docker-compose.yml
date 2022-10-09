@@ -1,0 +1,35 @@
+
+version: '3'
+
+services:
+  app:
+    hostname: mireabackend.dev
+    container_name: myapp
+    build:
+      context: ../
+      dockerfile: ./deployments/Dockerfile.app
+      target: prod
+    environment:
+      - DB_URL=postgres://postgres:mydbpassword@dockerdev.db:5432/postgres?sslmode=disable&
+
+  db:
+    hostname: dockerdev.db
+    build:
+      dockerfile: ./deployments/Dockerfile.postgresql
+      context: ../
+    environment:
+      - POSTGRES_PASSWORD=mydbpassword
+    container_name: myapp-db
+    depends_on:
+      - app
+
+  web-server:
+    image: nginx
+    container_name: myapp-nginx
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./hosts:/etc/nginx/conf.d
+      - ../web:/web
+    depends_on:
+      - db
