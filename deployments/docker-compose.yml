@@ -20,8 +20,6 @@ services:
     environment:
       - POSTGRES_PASSWORD=mydbpassword
     container_name: myapp-db
-    depends_on:
-      - app
 
   web-server:
     image: nginx
@@ -31,5 +29,3 @@ services:
     volumes:
       - ./hosts:/etc/nginx/conf.d
       - ../web:/web
-    depends_on:
-      - db

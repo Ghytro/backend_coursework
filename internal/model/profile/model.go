@@ -28,7 +28,7 @@ func (m *Model) CreateUser(ctx context.Context, user *entity.User) error {
 		var u entity.User
 		if err := tx.ModelContext(ctx, &u).Where("username = ? AND deleted_at IS NULL", user.Username).Select(); err != nil {
 			if err == pg.ErrNoRows {
-				_, err := tx.ModelContext(ctx, user).Returning("*").Insert()
+				_, err := tx.ModelContext(ctx, user).Value("password", "crypt(?password, gen_salt('bf'))").Insert()
 				return err
 			}
 		}

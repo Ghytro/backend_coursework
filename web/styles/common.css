@@ -1,0 +1,43 @@
+:root {
+    --text-color: #000;
+    --background-color: #C4DAEC;
+    --header-background-color: #31658C;
+    --header-text-color: #bbb;
+    --header-text-color-hover: #ffffff;
+    --transition-time: .3s;
+}
+
+header {
+    height: 9vh;
+    overflow: hidden;
+    padding-left: 50px;
+    padding-right: 50px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    background-color: var(--header-background-color);
+    transition: var(--transition-time);
+    color: var(--header-text-color);
+}
+
+.searchbar {
+    background-color: #fff;
+    color: var(--header-text-color);
+}
+
+.header-left {
+    float: left;
+}
+
+.header-right {
+    float: right;
+}
+
+.header-link {
+    text-decoration: none;
+}
+
+.new-poll:hover {
+    text-decoration: underline;
+    font-size: 24px;
+    color: var(--header-text-color-hover);
+}

@@ -1,21 +1,16 @@
 package view
 
 import (
-	"fmt"
-	"os"
-	"strings"
+	"backend_coursework/internal/common"
+	"html/template"
 )
 
-func GenViewHTML(view string) (string, error) {
-	htmlBytes, err := os.ReadFile(fmt.Sprintf("./internal/view/%s/%s.html", view, view))
-	if err != nil {
-		return "", err
+func GenTemplatesMap(paths ...string) (map[string]*template.Template, error) {
+	m := make(map[string]*template.Template)
+	for _, p := range paths {
+		t, err := template.ParseFiles("./web/" + p)
+		common.LogFatalErr(err)
+		m[p] = t
 	}
-	cssBytes, err := os.ReadFile(fmt.Sprintf("./internal/view/%s/%s.css", view, view))
-	if err != nil {
-		return "", err
-	}
-	htmlString, cssString := string(htmlBytes), string(cssBytes)
-	headEndIdx := strings.Index(htmlString, "</head>")
-	return htmlString[:headEndIdx] + "<style>\n" + cssString + "\n</style>\n" + htmlString[headEndIdx+len("</head>"):], nil
+	return m, nil
 }
