@@ -4,21 +4,54 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles/reset.css">
+    <link rel="stylesheet" href="/styles/common.css">
     <link rel="stylesheet" href="/styles/profile.css">
-    <title>{{.UserName}}</title>
+    <title>@Username</title>
 </head>
 <body>
     <header>
-        <form action="/search" method="GET">
+        <form action="/search" method="GET" style="float: left; width: 30%; margin: 0 auto;">
             <input class="searchbar" type="text" name="query" placeholder="Поиск...">
             <input class="searchbar-submit" type="submit" value="Найти">
         </form>
         <div class="header-right">
-            <a class="header-link" href="/profile">Профиль</a>
-            <a class="header-link" href="/polls/trending">В тренде</a>
-            <a class="header-link" href="/polls/my">Мои опросы</a>
-            <a class="header-link" href="/polls/new">Создать опрос</a>
+            <a class="smooth-underline" href="/profile">Профиль</a>
+            <a class="smooth-underline" href="/">В тренде</a>
+            <a class="smooth-underline" href="/polls/my?p=1">Мои опросы</a>
+            <a class="smooth-underline" href="/polls/new">Создать опрос</a>
         </div>
     </header>
+    <div class="content-container">
+        <div class="profile-info-container">
+            <div class="avatar">
+                <img src="https://www.clevelanddentalhc.com/wp-content/uploads/2018/03/sample-avatar.jpg">
+            </div>
+            <div class="profile-info">
+                <div class="full-name">Mike Korobkin</div>
+                <div class="username">@Ghytro</div>
+                <div class="country">
+                    <div style="height: 25px">
+                        <img src="/flags/RU.png" width="35px">
+                    </div>
+                    <div style="margin-left: 7px">Россия</div>
+                </div>
+                <hr>
+                <div class="bio">Какое то там био ААААААААААААААААААААААААААААААААААААА АААААААААААААААААААААААА АААААААААААА ААААААААААА ААААААААААААА ААААААААААА ААААААААААААААААААААААААААААААААА</div>
+            </div> 
+        </div>
+        <div class="poll-list">
+            <div class="recent-polls-title">Недавно созданные опросы:</div>
+            <div class="poll-card">
+                <div class="poll-created-at">12.10.2022 23:35</div>
+                <div class="poll-title">Never gonna</div>
+                <div class="is-anonymous">Anonymous poll</div>
+                <div class="poll-unvoted-option">Give you up</div>
+                <div class="poll-unvoted-option">Let you down</div>
+                <div class="poll-unvoted-option">Run around</div>
+                <div class="poll-unvoted-option">Desert you</div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
