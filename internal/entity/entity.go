@@ -24,12 +24,17 @@ type User struct {
 	pkID
 	baseEntity
 
-	Username  string  `pg:"username" form:"username"`
+	Username   string  `pg:"username" form:"username"`
+	FirstName  *string `pg:"first_name" form:"first_name"`
+	SecondName *string `pg:"second_name" form:"second_name"`
+
 	Password  string  `pg:"password" form:"password"`
 	Bio       *string `pg:"bio" form:"bio"`
 	AvatarUrl *string `pg:"avatar_url" form:"avatar_url"`
-	Polls     []*Poll `pg:"rel-has-many"`
-	Votes     []*Vote `pg:"rel-has-many"`
+	Country   *string `pg:"country" form:"country"`
+
+	Polls []*Poll `pg:"rel-has-many"`
+	Votes []*Vote `pg:"rel-has-many"`
 }
 
 type Poll struct {

@@ -3,9 +3,12 @@ CREATE EXTENSTION IF NOT EXISTS pgcrypto;
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR NOT NULL,
+    first_name VARCHAR,
+    second_name VARCHAR,
     password VARCHAR NOT NULL,
     bio VARCHAR,
     avatar_url VARCHAR UNIQUE,
+    country VARCHAR,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMPTZ
 );

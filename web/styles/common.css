@@ -1,43 +1,92 @@
 :root {
     --text-color: #000;
-    --background-color: #C4DAEC;
-    --header-background-color: #31658C;
-    --header-text-color: #bbb;
+    --background-color: #fff;
+    --header-background-color: #343434;
+    --header-text-color: #aaaaaa;
     --header-text-color-hover: #ffffff;
     --transition-time: .3s;
+    --contact-button-bg: #000;
+    --contact-button-text-color: #fff;
+    --blue-green-gradient-vertical: -webkit-linear-gradient(#07C3F2, #21D789);
+    --animation-transition-time: .5s;
 }
 
 header {
-    height: 9vh;
+    height: 5vh;
     overflow: hidden;
-    padding-left: 50px;
-    padding-right: 50px;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    padding: 1vh 3vw;
     background-color: var(--header-background-color);
     transition: var(--transition-time);
-    color: var(--header-text-color);
 }
 
-.searchbar {
-    background-color: #fff;
-    color: var(--header-text-color);
-}
-
-.header-left {
+.header-home {
+    width: 32px;
     float: left;
+    text-align: center;
+    font-size: 18px;
+    line-height: 25px;
+    transition: var(--transition-time);
+}
+
+.header-home:hover {
+    transform: scale(1.2);
+    cursor: pointer;
 }
 
 .header-right {
     float: right;
 }
 
-.header-link {
-    text-decoration: none;
+.toggle {
+    display: none;
+    cursor: pointer;
 }
 
-.new-poll:hover {
-    text-decoration: underline;
-    font-size: 24px;
+.smooth-underline {
+    display: inline-block;
+}
+
+.smooth-underline::after {
+    content: '';
+    width: 0px;
+    display: block;
+    transition: var(--transition-time);
+}
+
+.smooth-underline:hover::after {
+    width: 100%;
+}
+
+.header-right .smooth-underline::after {
+    background: var(--header-text-color-hover);
+    height: 2px;
+}
+
+.header-right .smooth-underline:hover {
     color: var(--header-text-color-hover);
+}
+
+.header-right a {
+    color: var(--header-text-color);
+    text-decoration: none;
+    font-size: 18px;
+    transition: var(--transition-time);
+    margin-left: 50px;
+}
+
+.gradient-text {
+    background: var(--blue-green-gradient-vertical);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.searchbar {
+    background-color: #fff;
+    border: 0;
+    border-radius: 10px;
+}
+
+.searchbar-submit {
+    border: 0;
+    border-radius: 10px;
 }
