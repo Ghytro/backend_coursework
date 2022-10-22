@@ -50,3 +50,11 @@ func (m *UserRepository) DeleteUser(ctx context.Context, userID entity.PK) error
 	_, err := m.db.ModelContext(ctx, (*entity.User)(nil)).Set("deleted_at = NOW()").Where("id = ?", userID).Update()
 	return err
 }
+
+func (m *UserRepository) Auth(ctx context.Context, username string, password string) (entity.PK, error) {
+	var u entity.User
+	if err := m.db.ModelContext(ctx, &u).Where("username = ? AND password = crypt(?, password)", username, password).Select(); err != nil {
+		return 0, err
+	}
+	return u.ID, nil
+}

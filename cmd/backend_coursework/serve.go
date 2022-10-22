@@ -4,8 +4,10 @@ import (
 	"backend_coursework/internal/database"
 	"backend_coursework/internal/entity"
 	"backend_coursework/internal/repository"
-	profileService "backend_coursework/internal/service/profile"
+	authService "backend_coursework/internal/usecase/auth"
+	profileService "backend_coursework/internal/usecase/profile"
 	"backend_coursework/internal/view"
+	authView "backend_coursework/internal/view/auth"
 	profileView "backend_coursework/internal/view/profile"
 	"errors"
 	"os"
@@ -21,8 +23,11 @@ func serve() {
 
 	profileRepo := repository.NewUserRepo(db)
 	profileService := profileService.NewService(profileRepo)
-	profView := profileView.NewView(profileService)
-	NewApp("", db, profView).Listen(":3001")
+	profileView := profileView.NewView(profileService)
+
+	authService := authService.NewService(profileRepo, "")
+	authView := authView.NewView(authService)
+	NewApp("", db, profileView, authView).Listen(":3001")
 }
 
 func NewApp(token interface{}, db repository.DBI, views ...view.View) *fiber.App {
@@ -60,6 +65,9 @@ func NewApp(token interface{}, db repository.DBI, views ...view.View) *fiber.App
 			}
 			c.Locals("user_entity", &u)
 			return c.Next()
+		},
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			return c.Redirect("/auth", fiber.StatusSeeOther)
 		},
 	})
 	middlewares := []fiber.Handler{

@@ -15,5 +15,8 @@ up.detached:
 up.build:
 	cd deployments && docker compose up --build
 
+restart.nginx:
+	docker restart myapp-nginx
+
 down:
 	cd deployments && docker compose down

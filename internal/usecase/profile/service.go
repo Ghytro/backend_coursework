@@ -6,27 +6,27 @@ import (
 )
 
 type Service struct {
-	repository ProfileRepo
+	repo ProfileRepo
 }
 
-func NewService(repository ProfileRepo) *Service {
+func NewService(repo ProfileRepo) *Service {
 	return &Service{
-		repository: repository,
+		repo: repo,
 	}
 }
 
 func (s *Service) CreateUser(ctx context.Context, user *entity.User) error {
-	return s.repository.CreateUser(ctx, user)
+	return s.repo.CreateUser(ctx, user)
 }
 
 func (s *Service) GetUser(ctx context.Context, userID entity.PK) (*entity.User, error) {
-	return s.repository.GetUser(ctx, userID)
+	return s.repo.GetUser(ctx, userID)
 }
 
 func (s *Service) UpdateUser(ctx context.Context, user *entity.User) error {
-	return s.repository.UpdateUser(ctx, user)
+	return s.repo.UpdateUser(ctx, user)
 }
 
 func (s *Service) DeleteUser(ctx context.Context, userID entity.PK) error {
-	return s.repository.DeleteUser(ctx, userID)
+	return s.repo.DeleteUser(ctx, userID)
 }

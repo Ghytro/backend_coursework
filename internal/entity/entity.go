@@ -27,7 +27,7 @@ type User struct {
 
 	Username   string  `pg:"username" form:"username"`
 	FirstName  *string `pg:"first_name" form:"first_name"`
-	SecondName *string `pg:"second_name" form:"second_name"`
+	SecondName *string `pg:"last_name" form:"last_name"`
 
 	Password  string  `pg:"password" form:"password"`
 	Bio       *string `pg:"bio" form:"bio"`

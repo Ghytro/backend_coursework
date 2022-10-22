@@ -1,10 +1,10 @@
-CREATE EXTENSTION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR NOT NULL,
     first_name VARCHAR,
-    second_name VARCHAR,
+    last_name VARCHAR,
     password VARCHAR NOT NULL,
     bio VARCHAR,
     avatar_url VARCHAR UNIQUE,
