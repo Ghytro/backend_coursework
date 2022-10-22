@@ -19,22 +19,48 @@ func NewUserRepo(db DBI) *UserRepository {
 	}
 }
 
-func (m *UserRepository) CreateUser(ctx context.Context, user *entity.User) error {
-	return m.db.RunInTransaction(ctx, func(tx *database.TX) error {
-		var u entity.User
-		if err := tx.ModelContext(ctx, &u).Where("username = ? AND deleted_at IS NULL", user.Username).Select(); err != nil {
+func (m *UserRepository) CreateUser(ctx context.Context, user *entity.User) (entity.PK, error) {
+	var u entity.User
+	err := m.db.RunInTransaction(ctx, func(tx *database.TX) error {
+		if err := tx.ModelContext(ctx, &u).Where("username = ?", user.Username).Select(); err != nil {
 			if err == pg.ErrNoRows {
-				_, err := tx.ModelContext(ctx, user).Value("password", "crypt(?password, gen_salt('bf'))").Insert()
-				return err
+				_, err := tx.ModelContext(ctx, &u).Value("password", "crypt(?, gen_salt('bf'))", user.Password).Returning("*").Insert()
+				if err != nil {
+					return err
+				}
+				return nil
 			}
+			return err
 		}
-		return errors.New("пользователь с таким именем уже существует")
+		if !u.DeletedAt.IsZero() {
+			return errors.New("пользователь с таким именем уже существует")
+		}
+		_, err := tx.ModelContext(ctx, u).Where("id = ?", u.ID).Set(
+			`username = ?
+			first_name = ?
+			last_name = ?
+			password = crypt(?, password),
+			bio = ?,
+			avatar_url = ?,
+			country = ?,
+			created_at = NOW(),
+			deleted_at = NULL`,
+			user.Username,
+			user.FirstName,
+			user.LastName,
+			user.Password,
+			user.Bio,
+			user.AvatarUrl,
+			user.Country,
+		).Update()
+		return err
 	})
+	return u.ID, err
 }
 
 func (m *UserRepository) GetUser(ctx context.Context, userID entity.PK) (*entity.User, error) {
 	var u entity.User
-	if err := m.db.ModelContext(ctx, &u).Where("id = ? AND deleted_at IS NULL ", userID).
+	if err := m.db.ModelContext(ctx, &u).Where("id = ? AND deleted_at IS NULL", userID).
 		Relation("Polls").Relation("Votes").Select(); err != nil {
 		return nil, err
 	}

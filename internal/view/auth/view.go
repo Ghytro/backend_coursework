@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"backend_coursework/internal/entity"
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
@@ -31,7 +32,17 @@ func (v *View) Routers(app fiber.Router, authHandler fiber.Handler, middlewares 
 }
 
 func (v *View) makeAuth(c *fiber.Ctx) error {
-	return errors.New("missing impl") // TODO
+	var model MakeAuthRequest
+	if err := c.BodyParser(&model); err != nil {
+		return entity.ErrRespIncorrectForm()
+	}
+
+	token, err := v.service.MakeAuth(c.Context(), model.Username, model.Password)
+	if err != nil {
+		return entity.ErrRespBadRequest(err)
+	}
+	c.Cookie(&fiber.Cookie{Name: "jwt", Value: token})
+	return c.Send(nil)
 }
 
 func (v *View) patchAuth(c *fiber.Ctx) error {
@@ -39,5 +50,15 @@ func (v *View) patchAuth(c *fiber.Ctx) error {
 }
 
 func (v *View) register(c *fiber.Ctx) error {
-	return errors.New("missing impl") // TODO
+	var model entity.User
+	if err := c.BodyParser(&model); err != nil {
+		return entity.ErrRespIncorrectForm()
+	}
+
+	token, err := v.service.Register(c.Context(), &model)
+	if err != nil {
+		return entity.ErrRespBadRequest(err)
+	}
+	c.Cookie(&fiber.Cookie{Name: "jwt", Value: token})
+	return c.Send(nil)
 }

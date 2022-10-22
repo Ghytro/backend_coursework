@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"errors"
 	"time"
 
 	"github.com/go-pg/pg/v10/types"
@@ -25,9 +26,9 @@ type User struct {
 	pkID
 	baseEntity
 
-	Username   string  `pg:"username" form:"username"`
-	FirstName  *string `pg:"first_name" form:"first_name"`
-	SecondName *string `pg:"last_name" form:"last_name"`
+	Username  string  `pg:"username" form:"username"`
+	FirstName *string `pg:"first_name" form:"first_name"`
+	LastName  *string `pg:"last_name" form:"last_name"`
 
 	Password  string  `pg:"password" form:"password"`
 	Bio       *string `pg:"bio" form:"bio"`
@@ -121,4 +122,8 @@ func ErrRespUnauthorized(err error) *ErrResponse {
 		StatusCode: fiber.StatusUnauthorized,
 		Err:        err,
 	}
+}
+
+func ErrRespIncorrectForm() *ErrResponse {
+	return ErrRespBadRequest(errors.New("не удалось раскодировать форму"))
 }

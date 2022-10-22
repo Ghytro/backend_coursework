@@ -15,7 +15,7 @@ func NewService(repo ProfileRepo) *Service {
 	}
 }
 
-func (s *Service) CreateUser(ctx context.Context, user *entity.User) error {
+func (s *Service) CreateUser(ctx context.Context, user *entity.User) (entity.PK, error) {
 	return s.repo.CreateUser(ctx, user)
 }
 

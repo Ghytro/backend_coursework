@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"backend_coursework/internal/entity"
 	"context"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -37,4 +38,18 @@ func (s *Service) MakeAuth(ctx context.Context, username string, password string
 
 func (s *Service) PatchAuth(ctx context.Context, username string, password string) (string, error) {
 	return "missing impl", nil // TODO
+}
+
+func (s *Service) Register(ctx context.Context, user *entity.User) (string, error) {
+	userID, err := s.repo.CreateUser(ctx, user)
+	if err != nil {
+		return "", err
+	}
+	claims := jwt.MapClaims{
+		"id":   userID,
+		"pass": user.Password,
+	}
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := t.SignedString(s.jwtSecret)
+	return token, err
 }
