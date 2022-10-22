@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/styles/reset.css">
     <link rel="stylesheet" href="/styles/common.css">
     <link rel="stylesheet" href="/styles/profile.css">
-    <title>@{{ .Username }}</title>
+    <title>@{{.Username}}</title>
 </head>
 <body>
     <header>
@@ -28,16 +28,16 @@
                 <img src="https://www.clevelanddentalhc.com/wp-content/uploads/2018/03/sample-avatar.jpg">
             </div>
             <div class="profile-info">
-                <div class="full-name">{{ .FullName }}</div>
-                <div class="username">@{{ .Username }}</div>
+                <div class="full-name">{{.FullName}}</div>
+                <div class="username">@{{.Username}}</div>
                 <div class="country">
                     <div style="height: 25px">
-                        <img src="/flags/{{ .CountryCode }}.png" width="35px">
+                        <img src="/flags/{{.CountryCode}}.png" width="35px">
                     </div>
-                    <div style="margin-left: 7px">{{ .CountryFullName }}</div>
+                    <div style="margin-left: 7px">{{.CountryFullName}}</div>
                 </div>
                 <hr>
-                <div class="bio">{{ .Bio }}</div>
+                <div class="bio">{{.Bio}}</div>
             </div> 
         </div>
         <div class="poll-list">
@@ -48,7 +48,7 @@
                 <div class="poll-title">{ .Title }</div>
                 <div class="is-anonymous">{ .IsAnonymousStr }</div>
                 {{range .Options}}
-                <div class="poll-unvoted-option">{{ . }}</div>
+                <div class="poll-unvoted-option">{{.}}</div>
                 {{end}}
             </div>
             {{end}}

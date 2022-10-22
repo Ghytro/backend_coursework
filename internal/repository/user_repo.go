@@ -19,26 +19,39 @@ func NewUserRepo(db DBI) *UserRepository {
 	}
 }
 
+func (m *UserRepository) RunInTransaction(ctx context.Context, f func(tx *database.TX) error) error {
+	return m.db.RunInTransaction(ctx, f)
+}
+
+func (m *UserRepository) WithTX(tx *database.TX) *UserRepository {
+	return NewUserRepo(tx)
+}
+
 func (m *UserRepository) CreateUser(ctx context.Context, user *entity.User) (entity.PK, error) {
 	var u entity.User
 	err := m.db.RunInTransaction(ctx, func(tx *database.TX) error {
 		if err := tx.ModelContext(ctx, &u).Where("username = ?", user.Username).Select(); err != nil {
 			if err == pg.ErrNoRows {
-				_, err := tx.ModelContext(ctx, &u).Value("password", "crypt(?, gen_salt('bf'))", user.Password).Returning("*").Insert()
-				if err != nil {
-					return err
-				}
-				return nil
+				_, _err := tx.ModelContext(ctx, &u).
+					Value("username", "?", user.Username).
+					Value("password", "crypt(?, gen_salt('bf'))", user.Password).
+					Value("first_name", "?", user.FirstName).
+					Value("last_name", "?", user.LastName).
+					Value("bio", "?", user.Bio).
+					Value("avatar_url", "?", user.AvatarUrl).
+					Value("country", "?", user.Country).
+					Returning("*").Insert()
+				return _err
 			}
 			return err
 		}
-		if !u.DeletedAt.IsZero() {
+		if u.DeletedAt.IsZero() {
 			return errors.New("пользователь с таким именем уже существует")
 		}
-		_, err := tx.ModelContext(ctx, u).Where("id = ?", u.ID).Set(
-			`username = ?
-			first_name = ?
-			last_name = ?
+		_, err := tx.ModelContext(ctx, &u).Where("id = ?", u.ID).Set(
+			`username = ?,
+			first_name = ?,
+			last_name = ?,
 			password = crypt(?, password),
 			bio = ?,
 			avatar_url = ?,

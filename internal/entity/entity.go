@@ -35,8 +35,8 @@ type User struct {
 	AvatarUrl *string `pg:"avatar_url" form:"avatar_url"`
 	Country   *string `pg:"country" form:"country"`
 
-	Polls []*Poll `pg:"rel-has-many"`
-	Votes []*Vote `pg:"rel-has-many"`
+	Polls []*Poll `pg:"rel:has-many"`
+	Votes []*Vote `pg:"rel:has-many"`
 }
 
 type Poll struct {

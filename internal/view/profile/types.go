@@ -1,7 +1,7 @@
 package profile
 
 type AnyProfileViewData struct {
-	UserName,
+	Username,
 	FullName,
 	CountryCode,
 	CountryFullName,

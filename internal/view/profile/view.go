@@ -44,9 +44,27 @@ func (v *View) getProfile(c *fiber.Ctx) error {
 		}
 		return entity.ErrRespBadRequest(err)
 	}
-	tpl := templates["profile/any.html"]
+	tpl := templates.MustGet("profile/any.html")
 	viewData := AnyProfileViewData{
-		UserName: user.Username,
+		Username: user.Username,
+	}
+	if user.FirstName != nil {
+		viewData.FullName += *user.FirstName
+	}
+	if user.LastName != nil {
+		viewData.FullName += *user.LastName
+	}
+	if user.Country != nil {
+		viewData.CountryCode = *user.Country
+		viewData.CountryFullName = *user.Country // TODO country mapping
+	} else {
+		viewData.CountryCode = "AQ" // unknown
+		viewData.CountryFullName = "Unknown"
+	}
+	if user.Bio != nil {
+		viewData.Bio = *user.Bio
+	} else {
+		viewData.Bio = "<Статус пуст>"
 	}
 	return view.SendTemplate(c, tpl, viewData)
 }
@@ -63,7 +81,7 @@ func (v *View) getMyProfile(c *fiber.Ctx) error {
 		}
 		return entity.ErrRespInternalServerError(err)
 	}
-	tpl := templates["profile/my.html"]
+	tpl := templates.MustGet("profile/my.html")
 	data := MyProfileViewData{
 		UserName: user.Username,
 	}

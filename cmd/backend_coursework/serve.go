@@ -20,14 +20,15 @@ import (
 
 func serve() {
 	db := database.NewPGDB(os.Getenv("DB_URL"), &database.PGLogger{})
+	jwtSecret := []byte("")
 
 	profileRepo := repository.NewUserRepo(db)
 	profileService := profileService.NewService(profileRepo)
 	profileView := profileView.NewView(profileService)
 
-	authService := authService.NewService(profileRepo, "")
+	authService := authService.NewService(profileRepo, jwtSecret)
 	authView := authView.NewView(authService)
-	NewApp("", db, profileView, authView).Listen(":3001")
+	NewApp(jwtSecret, db, profileView, authView).Listen(":3001")
 }
 
 func NewApp(token interface{}, db repository.DBI, views ...view.View) *fiber.App {

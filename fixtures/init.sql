@@ -10,7 +10,7 @@ CREATE TABLE users (
     avatar_url VARCHAR UNIQUE,
     country VARCHAR,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMPTZ
+    deleted_at TIMESTAMPTZ DEFAULT NULL
 );
 CREATE INDEX users_username_idx ON users (username);
 
