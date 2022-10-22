@@ -60,5 +60,5 @@ func (v *View) register(c *fiber.Ctx) error {
 		return entity.ErrRespBadRequest(err)
 	}
 	c.Cookie(&fiber.Cookie{Name: "jwt", Value: token})
-	return c.Send(nil)
+	return c.Redirect("/profile", fiber.StatusSeeOther)
 }

@@ -19,5 +19,11 @@ type Poll struct {
 }
 
 type MyProfileViewData struct {
-	UserName string
+	Username,
+	FullName,
+	CountryCode,
+	CountryFullName,
+	Bio string
+
+	Polls []Poll
 }
