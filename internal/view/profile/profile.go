@@ -2,6 +2,7 @@ package profile
 
 import (
 	"backend_coursework/internal/entity"
+	"backend_coursework/internal/view"
 	"errors"
 	"strconv"
 
@@ -10,20 +11,12 @@ import (
 )
 
 type View struct {
-	controller ProfileController
+	service UseCase
 }
 
-type AnyProfileViewData struct {
-	UserName string
-}
-
-type MyProfileViewData struct {
-	UserName string
-}
-
-func NewView(c ProfileController) *View {
+func NewView(s UseCase) *View {
 	return &View{
-		controller: c,
+		service: s,
 	}
 }
 
@@ -41,68 +34,38 @@ func (v *View) Routers(app fiber.Router, authHandler fiber.Handler, middlewares 
 func (v *View) getProfile(c *fiber.Ctx) error {
 	idParam, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
-		return &entity.ErrResponse{
-			StatusCode: fiber.StatusBadRequest,
-			Err:        err,
-		}
+		return entity.ErrRespBadRequest(err)
 	}
 	userID := entity.PK(idParam)
-	user, err := v.controller.GetUser(c.Context(), userID)
+	user, err := v.service.GetUser(c.Context(), userID)
 	if err != nil {
 		if err == pg.ErrNoRows {
-			return &entity.ErrResponse{
-				StatusCode: fiber.StatusNotFound,
-				Err:        err,
-			}
+			return entity.ErrRespNotFound(err)
 		}
-		return &entity.ErrResponse{
-			StatusCode: fiber.StatusBadRequest,
-			Err:        err,
-		}
+		return entity.ErrRespBadRequest(err)
 	}
 	tpl := templates["profile/any.html"]
 	viewData := AnyProfileViewData{
 		UserName: user.Username,
 	}
-	if err := tpl.Execute(c.Context().Response.BodyWriter(), viewData); err != nil {
-		return &entity.ErrResponse{
-			StatusCode: fiber.StatusInternalServerError,
-			Err:        errors.New("unable to send page"),
-		}
-	}
-	return c.SendStatus(fiber.StatusOK)
+	return view.SendTemplate(c, tpl, viewData)
 }
 
 func (v *View) getMyProfile(c *fiber.Ctx) error {
 	user, ok := c.Locals("user_entity").(*entity.User)
 	if !ok {
-		return &entity.ErrResponse{
-			StatusCode: fiber.StatusUnauthorized,
-			Err:        errors.New("авторизация неудачна"),
-		}
+		return entity.ErrRespUnauthorized(errors.New("некорректный токен авторизации"))
 	}
-	user, err := v.controller.GetUser(c.Context(), user.ID)
+	user, err := v.service.GetUser(c.Context(), user.ID)
 	if err != nil {
 		if err == pg.ErrNoRows {
-			return &entity.ErrResponse{
-				StatusCode: fiber.StatusNotFound,
-				Err:        errors.New("пользователь не найден"),
-			}
+			return entity.ErrRespNotFound(errors.New("пользователь не найден"))
 		}
-		return &entity.ErrResponse{
-			StatusCode: fiber.StatusInternalServerError,
-			Err:        err,
-		}
+		return entity.ErrRespInternalServerError(err)
 	}
 	tpl := templates["profile/my.html"]
 	data := MyProfileViewData{
 		UserName: user.Username,
 	}
-	if err := tpl.Execute(c.Response().BodyWriter(), data); err != nil {
-		return &entity.ErrResponse{
-			StatusCode: fiber.StatusInternalServerError,
-			Err:        err,
-		}
-	}
-	return c.SendStatus(fiber.StatusOK)
+	return view.SendTemplate(c, tpl, data)
 }

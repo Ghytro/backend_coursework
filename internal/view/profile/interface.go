@@ -5,7 +5,7 @@ import (
 	"context"
 )
 
-type ProfileController interface {
+type UseCase interface {
 	CreateUser(ctx context.Context, user *entity.User) error
 	GetUser(ctx context.Context, userID entity.PK) (*entity.User, error)
 	UpdateUser(ctx context.Context, user *entity.User) error

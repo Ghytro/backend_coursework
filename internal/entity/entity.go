@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/go-pg/pg/v10/types"
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
@@ -92,4 +93,32 @@ func (e *ErrResponse) Error() string {
 
 func (e *ErrResponse) Unwrap() error {
 	return e.Err
+}
+
+func ErrRespBadRequest(err error) *ErrResponse {
+	return &ErrResponse{
+		StatusCode: fiber.StatusBadRequest,
+		Err:        err,
+	}
+}
+
+func ErrRespNotFound(err error) *ErrResponse {
+	return &ErrResponse{
+		StatusCode: fiber.StatusNotFound,
+		Err:        err,
+	}
+}
+
+func ErrRespInternalServerError(err error) *ErrResponse {
+	return &ErrResponse{
+		StatusCode: fiber.StatusInternalServerError,
+		Err:        err,
+	}
+}
+
+func ErrRespUnauthorized(err error) *ErrResponse {
+	return &ErrResponse{
+		StatusCode: fiber.StatusUnauthorized,
+		Err:        err,
+	}
 }

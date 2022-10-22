@@ -5,7 +5,7 @@ import (
 	"context"
 )
 
-type ProfileModel interface {
+type ProfileRepo interface {
 	CreateUser(ctx context.Context, user *entity.User) error
 	GetUser(ctx context.Context, userID entity.PK) (*entity.User, error)
 	UpdateUser(ctx context.Context, user *entity.User) error
