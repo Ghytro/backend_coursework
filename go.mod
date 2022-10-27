@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
+	github.com/biter777/countries v1.5.6 // indirect
 	github.com/go-pg/pg/v10 v10.10.7 // indirect
 	github.com/go-pg/zerochecker v0.2.0 // indirect
 	github.com/gofiber/fiber/v2 v2.38.1 // indirect

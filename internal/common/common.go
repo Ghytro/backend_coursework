@@ -3,6 +3,8 @@ package common
 import (
 	"log"
 	"sync"
+
+	"github.com/biter777/countries"
 )
 
 func LogFatalErr(err error) {
@@ -40,4 +42,13 @@ func (m *SyncMap[K, V]) Set(key K, val V) {
 	m.mut.Lock()
 	defer m.mut.Unlock()
 	m.m[key] = val
+}
+
+func GetCountryByAlpha2(alpha2 string) *countries.Country {
+	for _, c := range countries.AllInfo() {
+		if c.Alpha2 == alpha2 {
+			return c
+		}
+	}
+	return nil
 }

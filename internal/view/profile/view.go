@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"backend_coursework/internal/common"
 	"backend_coursework/internal/entity"
 	"backend_coursework/internal/view"
 	"errors"
@@ -91,12 +92,13 @@ func (v *View) getMyProfile(c *fiber.Ctx) error {
 	if user.LastName != nil {
 		viewData.FullName += *user.LastName
 	}
+	viewData.CountryCode = "AQ" // unknown
+	viewData.CountryFullName = "&lt;Unknown&gt;"
 	if user.Country != nil {
-		viewData.CountryCode = *user.Country
-		viewData.CountryFullName = *user.Country // TODO country mapping
-	} else {
-		viewData.CountryCode = "AQ" // unknown
-		viewData.CountryFullName = "Unknown"
+		if c := common.GetCountryByAlpha2(*user.Country); c != nil {
+			viewData.CountryCode = *user.Country
+			viewData.CountryFullName = c.Code.StringRus()
+		}
 	}
 	if user.Bio != nil {
 		viewData.Bio = *user.Bio

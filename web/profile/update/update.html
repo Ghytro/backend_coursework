@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles/reset.css">
+    <link rel="stylesheet" href="/styles/common.css">
+    <link rel="stylesheet" href="/styles/profile.css">
+    <title>@{{.Username}}</title>
+</head>
+<body>
+    <header>
+        <form action="/search" method="GET" style="float: left; width: 30%; margin: 0 auto;">
+            <input class="searchbar" type="text" name="query" placeholder="Поиск...">
+            <input class="searchbar-submit" type="submit" value="Найти">
+        </form>
+        <div class="header-right">
+            <a class="smooth-underline" href="/profile">Профиль</a>
+            <a class="smooth-underline" href="/">В тренде</a>
+            <a class="smooth-underline" href="/polls/my?p=1">Мои опросы</a>
+            <a class="smooth-underline" href="/polls/new">Создать опрос</a>
+        </div>
+    </header>
+    <div class="content-container">
+        <div class="profile-info-container">
+            <div class="avatar">
+                <img src="https://www.clevelanddentalhc.com/wp-content/uploads/2018/03/sample-avatar.jpg">
+            </div>
+            <div class="profile-info">
+                <div class="full-name"></div>
+                <div class="username">@{{.Username}}</div>
+                <div class="country">
+                    <div style="height: 25px">
+                        <img src="/flags/{{.CountryCode}}.png" width="35px">
+                    </div>
+                    <div style="margin-left: 7px">{{.CountryFullName}}</div>
+                </div>
+                <hr>
+                <div class="bio">{{.Bio}}</div>
+            </div> 
+        </div>
+        <div class="poll-list">
+            <div class="recent-polls-title">Недавно созданные опросы:</div>
+            {{range .Polls}}
+            <div class="poll-card">
+                <div class="poll-created-at">{ .CreatedAt }</div>
+                <div class="poll-title">{ .Title }</div>
+                <div class="is-anonymous">{ .IsAnonymousStr }</div>
+                {{range .Options}}
+                <div class="poll-unvoted-option">{{.}}</div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+    </div>
+</body>
+</html>
