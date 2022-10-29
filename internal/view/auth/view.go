@@ -3,6 +3,8 @@ package auth
 import (
 	"backend_coursework/internal/entity"
 	"errors"
+	"fmt"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -22,6 +24,7 @@ func (v *View) Routers(app fiber.Router, authHandler fiber.Handler, middlewares 
 	for _, m := range middlewares {
 		r.Use(m)
 	}
+	r.Get("/", v.getAuth)
 	r.Post("/", v.makeAuth)
 	r.Patch("/", v.patchAuth)
 	app.Mount("/auth", r)
@@ -31,18 +34,29 @@ func (v *View) Routers(app fiber.Router, authHandler fiber.Handler, middlewares 
 	app.Mount("/register", r)
 }
 
+func (v *View) getAuth(c *fiber.Ctx) error {
+	file, err := os.Open("./web/auth/index.html")
+	if err != nil {
+		return entity.ErrRespInternalServerError(err)
+	}
+	return c.SendStream(file)
+}
+
 func (v *View) makeAuth(c *fiber.Ctx) error {
+	fmt.Println("make auth handler")
 	var model MakeAuthRequest
 	if err := c.BodyParser(&model); err != nil {
 		return entity.ErrRespIncorrectForm()
 	}
-
+	fmt.Println(model)
 	token, err := v.service.MakeAuth(c.Context(), model.Username, model.Password)
 	if err != nil {
+		fmt.Println(err)
 		return entity.ErrRespBadRequest(err)
 	}
+	fmt.Println(token)
 	c.Cookie(&fiber.Cookie{Name: "jwt", Value: token})
-	return c.Send(nil)
+	return c.Redirect("/profile", fiber.StatusSeeOther)
 }
 
 func (v *View) patchAuth(c *fiber.Ctx) error {

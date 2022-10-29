@@ -7,6 +7,7 @@ import (
 	"errors"
 
 	"github.com/go-pg/pg/v10"
+	"github.com/samber/lo"
 )
 
 type UserRepository struct {
@@ -73,9 +74,46 @@ func (m *UserRepository) CreateUser(ctx context.Context, user *entity.User) (ent
 
 func (m *UserRepository) GetUser(ctx context.Context, userID entity.PK) (*entity.User, error) {
 	var u entity.User
-	if err := m.db.ModelContext(ctx, &u).Where("id = ? AND deleted_at IS NULL", userID).
-		Relation("Polls").Relation("Votes").Select(); err != nil {
+	if err := m.db.ModelContext(ctx, &u).Where("id = ? AND deleted_at IS NULL", userID).Select(); err != nil {
 		return nil, err
+	}
+	return &u, nil
+}
+
+func (m *UserRepository) GetUserWithPolls(ctx context.Context, userID entity.PK, limit int) (*entity.User, error) {
+	var (
+		u       entity.User
+		options []*entity.PollOption
+	)
+	err := m.db.RunInTransaction(ctx, func(tx *database.TX) error {
+		if err := tx.ModelContext(ctx, &u).Where("id = ? AND deleted_at IS NULL", userID).Select(); err != nil {
+			return err
+		}
+		q := tx.ModelContext(ctx, &u.Polls).Where("creator_id = ?", userID).Order("created_at DESC")
+		if limit != -1 {
+			q = q.Limit(limit)
+		}
+		if err := q.Select(); err != nil {
+			return err
+		}
+		if len(u.Polls) == 0 {
+			return nil
+		}
+		pollsIDs := lo.Map(u.Polls, func(item *entity.Poll, index int) entity.PK {
+			return item.ID
+		})
+		return tx.ModelContext(ctx, &options).Where("poll_id IN (?)", pg.In(pollsIDs)).Order("index ASC").Select()
+	})
+	if err != nil {
+		return nil, err
+	}
+	pollsMapping := make(map[entity.PK]*entity.Poll)
+	for _, p := range u.Polls {
+		pollsMapping[p.ID] = p
+	}
+	for _, o := range options {
+		p := pollsMapping[o.PollID]
+		p.Options = append(p.Options, o)
 	}
 	return &u, nil
 }

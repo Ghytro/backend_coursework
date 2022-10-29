@@ -14,6 +14,11 @@ CREATE TABLE users (
 );
 CREATE INDEX users_username_idx ON users (username);
 
+INSERT INTO users
+    (username, first_name, last_name, password, bio, country)
+VALUES
+    ('ghytro', 'Michael', 'Korobkov', crypt('123123', gen_salt('bf')), 'some bio that i want to tell you', 'RU');
+
 CREATE TABLE polls (
     id INT PRIMARY KEY,
     creator_id INT REFERENCES users(id) ON DELETE SET NULL,

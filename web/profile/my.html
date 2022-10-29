@@ -40,6 +40,7 @@
                 <div class="bio">{{.Bio}}</div>
             </div> 
         </div>
+        {{if .HasRecentPolls}}
         <div class="poll-list">
             <div class="recent-polls-title">Недавно созданные опросы:</div>
             {{range .Polls}}
@@ -53,6 +54,9 @@
             </div>
             {{end}}
         </div>
+        {{else}}
+        <div class="recent-polls-title">Нет недавно созданных опросов</div>
+        {{end}}
     </div>
 </body>
 </html>

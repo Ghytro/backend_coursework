@@ -23,6 +23,10 @@ func (s *Service) GetUser(ctx context.Context, userID entity.PK) (*entity.User, 
 	return s.repo.GetUser(ctx, userID)
 }
 
+func (s *Service) GetUserWithPolls(ctx context.Context, userID entity.PK, limit int) (*entity.User, error) {
+	return s.repo.GetUserWithPolls(ctx, userID, limit)
+}
+
 func (s *Service) UpdateUser(ctx context.Context, user *entity.User) error {
 	return s.repo.UpdateUser(ctx, user)
 }

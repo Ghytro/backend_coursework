@@ -38,7 +38,7 @@ func (v *View) getProfile(c *fiber.Ctx) error {
 		return entity.ErrRespBadRequest(err)
 	}
 	userID := entity.PK(idParam)
-	user, err := v.service.GetUser(c.Context(), userID)
+	user, err := v.service.GetUserWithPolls(c.Context(), userID, 5)
 	if err != nil {
 		if err == pg.ErrNoRows {
 			return entity.ErrRespNotFound(err)
@@ -53,7 +53,7 @@ func (v *View) getProfile(c *fiber.Ctx) error {
 		viewData.FullName += *user.FirstName
 	}
 	if user.LastName != nil {
-		viewData.FullName += *user.LastName
+		viewData.FullName += " " + *user.LastName
 	}
 	if user.Country != nil {
 		viewData.CountryCode = *user.Country
@@ -67,6 +67,21 @@ func (v *View) getProfile(c *fiber.Ctx) error {
 	} else {
 		viewData.Bio = "<Статус пуст>"
 	}
+	viewData.HasRecentPolls = len(user.Polls) != 0
+	for _, p := range user.Polls {
+		pView := Poll{
+			CreatedAt: p.CreatedAt.Format("02.01.2006 15:04:05"),
+			Title:     p.Topic,
+		}
+		if p.IsAnonymous {
+			pView.IsAnonymousStr = "Анонимный опрос"
+		} else {
+			pView.IsAnonymousStr = "Публичный опрос"
+		}
+		for _, o := range p.Options {
+			pView.Options = append(pView.Options, o.Option)
+		}
+	}
 	return view.SendTemplate(c, tpl, viewData)
 }
 
@@ -75,7 +90,7 @@ func (v *View) getMyProfile(c *fiber.Ctx) error {
 	if !ok {
 		return entity.ErrRespUnauthorized(errors.New("некорректный токен авторизации"))
 	}
-	user, err := v.service.GetUser(c.Context(), user.ID)
+	user, err := v.service.GetUserWithPolls(c.Context(), user.ID, 5)
 	if err != nil {
 		if err == pg.ErrNoRows {
 			return entity.ErrRespNotFound(errors.New("пользователь не найден"))
@@ -104,6 +119,21 @@ func (v *View) getMyProfile(c *fiber.Ctx) error {
 		viewData.Bio = *user.Bio
 	} else {
 		viewData.Bio = "<Статус пуст>"
+	}
+	viewData.HasRecentPolls = len(user.Polls) != 0
+	for _, p := range user.Polls {
+		pView := Poll{
+			CreatedAt: p.CreatedAt.Format("02.01.2006 15:04:05"),
+			Title:     p.Topic,
+		}
+		if p.IsAnonymous {
+			pView.IsAnonymousStr = "Анонимный опрос"
+		} else {
+			pView.IsAnonymousStr = "Публичный опрос"
+		}
+		for _, o := range p.Options {
+			pView.Options = append(pView.Options, o.Option)
+		}
 	}
 	return view.SendTemplate(c, tpl, viewData)
 }
