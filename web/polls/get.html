@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles/reset.css">
+    <link rel="stylesheet" href="/styles/common.css">
+    <link rel="stylesheet" href="/styles/poll-get.css">
+    <title>{{.Topic}}</title>
+</head>
+<body>
+    <header>
+        <form action="/search" method="GET" style="float: left; width: 30%; margin: 0 auto;">
+            <input class="searchbar" type="text" name="query" placeholder="Поиск...">
+            <input class="searchbar-submit" type="submit" value="Найти">
+        </form>
+        <div class="header-right">
+            <a class="smooth-underline" href="/profile">Профиль</a>
+            <a class="smooth-underline" href="/">В тренде</a>
+            <a class="smooth-underline" href="/polls/my?p=1">Мои опросы</a>
+            <a class="smooth-underline" href="/polls/new">Создать опрос</a>
+        </div>
+    </header>
+    <div class="title">Опрос от <a href="/profile/{{.UserID}}">@{{.Username}}</a></div>
+    <div class="content-container">
+        <form method="POST" action="/vote">
+            <div class="card">
+                <div class="topic">{{.Topic}}</div>
+                {{range .Options}}
+                <div class="option">
+                    {{.Option}} ({{.VotesNumber}} голосов)
+                    <label>
+                        <input type="checkbox">
+                    </label>
+                </div>
+                {{end}}
+            </div>
+        </form>
+    </div>
+</body>
+</html>

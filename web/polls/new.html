@@ -24,12 +24,24 @@
         </div>
     </header>
     <div class="content-container">
-        <form method="POST" action="/auth">
+        <form method="POST" action="/polls">
             <div class="card">
                 <input class="card-input" type="text" placeholder="Тема опроса" name="topic">
                 <input class="card-input" type="text" placeholder="Вариант №1" name="options[]">
                 <div id="added-options"></div>
                 <input type="button" onclick="addOption()" value="+">
+                <label>
+                    <input type="checkbox" name="is_anonymous" value="on">
+                    Анонимный опрос
+                </label>
+                <label>
+                    <input type="checkbox" name="multiple_choice" value="on">
+                    Множественный выбор
+                </label>
+                <label>
+                    <input type="checkbox" name="cant_revote" value="on">
+                    Переголосовать нельзя
+                </label>
                 <input type="submit" name="submit" value="Создать опрос">
             </div>
         </form>

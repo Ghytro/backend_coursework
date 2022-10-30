@@ -26,11 +26,11 @@ type User struct {
 	pkID
 	baseEntity
 
-	Username  string  `pg:"username" form:"username"`
+	Username  string  `pg:"username,notnull" form:"username"`
 	FirstName *string `pg:"first_name" form:"first_name"`
 	LastName  *string `pg:"last_name" form:"last_name"`
 
-	Password  string  `pg:"password" form:"password"`
+	Password  string  `pg:"password,notnull" form:"password"`
 	Bio       *string `pg:"bio" form:"bio"`
 	AvatarUrl *string `pg:"avatar_url" form:"avatar_url"`
 	Country   *string `pg:"country" form:"country"`
@@ -48,11 +48,11 @@ type Poll struct {
 	CreatorID PK    `pg:"creator_id"`
 	Creator   *User `pg:"rel:has-one"`
 
-	Topic          string        `pg:"topic"`
-	IsAnonymous    bool          `pg:"is_anonymous"`
-	MultipleChoice bool          `pg:"multiple_choice"`
-	RevoteAbility  bool          `pg:"revote_ability"`
-	Options        []*PollOption `pg:"rel-has-many"`
+	Topic          string        `pg:"topic,notnull"`
+	IsAnonymous    bool          `pg:"is_anonymous,notnull"`
+	MultipleChoice bool          `pg:"multiple_choice,notnull"`
+	RevoteAbility  bool          `pg:"revote_ability,notnull"`
+	Options        []*PollOption `pg:"rel:has-many"`
 }
 
 type PollOption struct {
@@ -63,11 +63,13 @@ type PollOption struct {
 	PollID PK    `pg:"poll_id"`
 	Poll   *Poll `pg:"rel:has-one"`
 
-	Votes []*Vote `pg:"rel-has-many"`
+	Votes []*Vote `pg:"rel:has-many"`
 
-	Index     int       `pg:"index"`
-	Option    string    `pg:"option"`
-	UpdatedAt time.Time `pg:"updated_at"`
+	VotesAmount int `pg:"-"`
+
+	Index     int            `pg:"index,notnull"`
+	Option    string         `pg:"option,notnull"`
+	UpdatedAt types.NullTime `pg:"updated_at"`
 }
 
 type Vote struct {
@@ -76,10 +78,10 @@ type Vote struct {
 	baseEntity
 	ID uuid.UUID `pg:"id"`
 
-	UserID PK    `pg:"user_id"`
+	UserID PK    `pg:"user_id,notnull"`
 	User   *User `pg:"rel:has-one"`
 
-	OptionID PK          `pg:"option_id"`
+	OptionID PK          `pg:"option_id,notnull"`
 	Option   *PollOption `pg:"rel:has-one"`
 }
 

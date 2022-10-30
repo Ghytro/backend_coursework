@@ -5,6 +5,7 @@ import (
 	"backend_coursework/internal/entity"
 	"backend_coursework/internal/repository"
 	authService "backend_coursework/internal/usecase/auth"
+	pollsService "backend_coursework/internal/usecase/polls"
 	profileService "backend_coursework/internal/usecase/profile"
 	"backend_coursework/internal/view"
 	authView "backend_coursework/internal/view/auth"
@@ -30,7 +31,9 @@ func serve() {
 	authService := authService.NewService(profileRepo, jwtSecret)
 	authView := authView.NewView(authService)
 
-	pollsView := pollsView.NewView(nil)
+	pollRepo := repository.NewPollsRepo(db)
+	pollService := pollsService.NewService(pollRepo)
+	pollsView := pollsView.NewView(pollService)
 	NewApp(
 		jwtSecret,
 		db,

@@ -30,6 +30,7 @@ services:
       - "8080:8080"
     volumes:
       - ./hosts:/etc/nginx/conf.d
+      - ./includes:/etc/nginx/includes
       - ../web:/web
     depends_on:
       - app

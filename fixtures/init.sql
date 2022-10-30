@@ -20,7 +20,7 @@ VALUES
     ('ghytro', 'Michael', 'Korobkov', crypt('123123', gen_salt('bf')), 'some bio that i want to tell you', 'RU');
 
 CREATE TABLE polls (
-    id INT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     creator_id INT REFERENCES users(id) ON DELETE SET NULL,
     topic VARCHAR NOT NULL,
     is_anonymous BOOLEAN NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE polls (
 );
 
 CREATE TABLE poll_options (
-    id INT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     poll_id INT NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
     index INT NOT NULL,
     option VARCHAR NOT NULL,

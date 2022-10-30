@@ -1,0 +1,33 @@
+.title {
+    font-size: 24px;
+}
+
+.content-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 45vw;
+    padding: 50px 0;
+    background: #404040;
+    border-radius: 35px;
+    color: #fff;
+}
+
+.topic {
+    font-size: 18px;
+}
+
+.option {
+    border: solid 2px white;
+    border-radius: 10px;
+    text-align: left;
+}
