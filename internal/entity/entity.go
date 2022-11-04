@@ -83,6 +83,9 @@ type Vote struct {
 
 	OptionID PK          `pg:"option_id,notnull"`
 	Option   *PollOption `pg:"rel:has-one"`
+
+	PollID PK    `pg:"vote_id,notnull"`
+	Poll   *Poll `pg:"rel:has-one"`
 }
 
 type ErrResponse struct {

@@ -31,7 +31,11 @@
                 <div class="option">
                     {{.Option}} ({{.VotesNumber}} голосов)
                     <label>
+                        {{if .MultipleChoice}}
                         <input type="checkbox">
+                        {{else}}
+                        <input type="radio">
+                        {{end}}
                     </label>
                 </div>
                 {{end}}

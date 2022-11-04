@@ -48,63 +48,59 @@ func (r *PollsRepo) CreatePoll(ctx context.Context, poll *entity.Poll) error {
 func (r *PollsRepo) GetPoll(ctx context.Context, id entity.PK) (*entity.Poll, error) {
 	resp := &entity.Poll{}
 	resp.ID = id
-	return resp, r.db.ModelContext(ctx, resp).WherePK().Relation("Options").Relation("Creator").Select()
+	return resp, r.db.ModelContext(ctx, resp).WherePK().Relation("Options").Select()
 }
 
-func (r *PollsRepo) GetPollWithVotesAmount(ctx context.Context, id entity.PK) (*entity.Poll, error) {
+func (r *PollsRepo) GetPollCreator(ctx context.Context, id entity.PK) (*entity.User, error) {
+	var p entity.Poll
+	return p.Creator, r.db.ModelContext(ctx, &p).Where("id = ?", id).Relation("Creator").Select()
+}
+
+func (r *PollsRepo) GetVotesAmount(ctx context.Context, id entity.PK) ([]*entity.PollOption, error) {
 	var (
-		resp  entity.Poll
-		model []struct {
+		options []*entity.PollOption
+		model   []struct {
 			tableName struct{} `pg:"votes"`
 
 			OptID entity.PK `pg:"option_id"`
 			Count int       `pg:"cnt"`
 		}
 	)
-	resp.ID = id
-	err := r.db.RunInTransaction(ctx, func(tx *database.TX) error {
-		if err := tx.ModelContext(ctx, &resp).
-			WherePK().
-			Relation("Options").
-			Select(); err != nil {
+	r.db.RunInTransaction(ctx, func(tx *database.TX) error {
+		if err := tx.ModelContext(ctx, &options).Where("poll_id = ?", id).Select(); err != nil {
 			return err
 		}
-		var u entity.User
-		u.ID = resp.CreatorID
-		if err := tx.ModelContext(ctx, &u).WherePK().Select(); err != nil {
-			return err
-		}
-		resp.Creator = &u
-		opts := lo.Map(resp.Options, func(opt *entity.PollOption, idx int) entity.PK {
-			return opt.ID
+		optIds := lo.Map(options, func(o *entity.PollOption, idx int) entity.PK {
+			return o.ID
 		})
+
 		return tx.ModelContext(ctx, &model).
-			Where("option_id IN (?)", pg.In(opts)).
+			Where("option_id IN (?)", pg.In(optIds)).
 			Group("option_id").
 			ColumnExpr("option_id, count(*) AS cnt").
 			Select()
 	})
-	if err != nil {
-		return nil, err
-	}
-	m := make(map[entity.PK]int)
 	for _, o := range model {
-		m[o.OptID] = o.Count
+		opt, _ := lo.Find(options, func(el *entity.PollOption) bool {
+			return el.ID == o.OptID
+		})
+		opt.VotesAmount = o.Count
 	}
-	for i := range resp.Options {
-		resp.Options[i].VotesAmount = m[resp.Options[i].ID]
-	}
-	return &resp, nil
+	return options, nil
 }
 
-func (r *PollsRepo) GetPollWithVotes(ctx context.Context, id entity.PK) (*entity.Poll, error) {
-	var resp entity.Poll
-	resp.ID = id
-	err := r.db.RunInTransaction(ctx, func(tx *database.TX) error {
-		if err := tx.ModelContext(ctx, &resp).WherePK().Relation("Options").Relation("Creator").Select(); err != nil {
-			return err
+func (r *PollsRepo) UserVoted(ctx context.Context, userID entity.PK, pollID entity.PK) (bool, error) {
+	var vote entity.Vote
+	if err := r.db.ModelContext(ctx, &vote).Where("user_id = ? AND poll_id = ?", userID, pollID).Select(); err != nil {
+		if err == pg.ErrNoRows {
+			return false, nil
 		}
-		return tx.ModelContext(ctx, &resp.Options).Where("poll_id = ?", id).Relation("Votes").Select()
-	})
-	return &resp, err
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *PollsRepo) GetUserPollVotes(ctx context.Context, userID entity.PK, pollID entity.PK) ([]*entity.Vote, error) {
+	var result []*entity.Vote
+	return result, r.db.ModelContext(ctx, &result).Where("user_id = ? AND poll_id = ?", userID, pollID).Select()
 }

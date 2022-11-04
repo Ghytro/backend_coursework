@@ -23,9 +23,9 @@ CREATE TABLE polls (
     id SERIAL PRIMARY KEY,
     creator_id INT REFERENCES users(id) ON DELETE SET NULL,
     topic VARCHAR NOT NULL,
-    is_anonymous BOOLEAN NOT NULL,
-    multiple_choice BOOLEAN NOT NULL,
-    revote_ability BOOLEAN NOT NULL,
+    is_anonymous BOOLEAN NOT NULL DEFAULT FALSE,
+    multiple_choice BOOLEAN NOT NULL DEFAULT FALSE,
+    revote_ability BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMPTZ
 );
@@ -42,6 +42,7 @@ CREATE INDEX poll_options_poll_id_idx ON poll_options (poll_id);
 CREATE TABLE votes (
     id UUID PRIMARY KEY,
     user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    poll_id INT NOT NULL REFERENCES polls(id) ON DELETE CASCADE, -- для быстроты получения
     option_id INT NOT NULL REFERENCES poll_options(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMPTZ

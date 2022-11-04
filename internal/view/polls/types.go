@@ -12,7 +12,12 @@ type GetPollViewData struct {
 	Topic,
 	UserID,
 	Username string
-	Options []Option
+	MultipleChoice,
+	RevoteAbility,
+	IsAnonymous,
+	CurrentUserVoted bool
+	Options          []Option
+	CurrentUserVotes []bool
 }
 
 type Option struct {

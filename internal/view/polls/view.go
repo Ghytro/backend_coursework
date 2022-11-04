@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/samber/lo"
 )
 
 type View struct {
@@ -61,14 +62,22 @@ func (v *View) getPoll(c *fiber.Ctx) error {
 	if err != nil {
 		return entity.ErrRespBadRequest(err)
 	}
-	poll, err := v.service.GetPollWithVotesAmount(c.Context(), entity.PK(pollID))
+	user, ok := c.Locals("user_entity").(*entity.User)
+	if !ok {
+		return entity.ErrRespUnauthorized(errors.New("авторизуйтесь заново"))
+	}
+	poll, currentUserVotes, err := v.service.GetPollWithVotesAmount(c.Context(), entity.PK(pollID), user.ID)
 	if err != nil {
 		return entity.ErrRespBadRequest(err)
 	}
 	viewData := GetPollViewData{
-		Topic:    poll.Topic,
-		UserID:   fmt.Sprint(poll.Creator.ID),
-		Username: poll.Creator.Username,
+		Topic:            poll.Topic,
+		UserID:           fmt.Sprint(poll.Creator.ID),
+		Username:         poll.Creator.Username,
+		IsAnonymous:      poll.IsAnonymous,
+		MultipleChoice:   poll.MultipleChoice,
+		RevoteAbility:    poll.RevoteAbility,
+		CurrentUserVoted: len(currentUserVotes) != 0,
 	}
 	for _, o := range poll.Options {
 		viewData.Options = append(viewData.Options, Option{
@@ -76,6 +85,17 @@ func (v *View) getPoll(c *fiber.Ctx) error {
 			VotesNumber: fmt.Sprint(o.VotesAmount),
 		})
 	}
+
+	if viewData.CurrentUserVoted {
+		viewData.CurrentUserVotes = make([]bool, len(poll.Options))
+		for _, v := range currentUserVotes {
+			_, optIdx, _ := lo.FindIndexOf(poll.Options, func(o *entity.PollOption) bool {
+				return o.ID == v.OptionID
+			})
+			viewData.CurrentUserVotes[optIdx] = true
+		}
+	}
+
 	tpl := templates.MustGet("polls/get.html")
 	return view.SendTemplate(c, tpl, viewData)
 }
