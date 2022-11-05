@@ -16,6 +16,8 @@ type Reader interface {
 
 type Writer interface {
 	CreatePoll(ctx context.Context, poll *entity.Poll) error
+	Vote(ctx context.Context, userID entity.PK, pollID entity.PK, optIdxs ...int) error
+	Unvote(ctx context.Context, userID entity.PK, pollID entity.PK) error
 }
 
 type Repository interface {

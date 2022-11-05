@@ -9,6 +9,7 @@ type NewPollRequest struct {
 }
 
 type GetPollViewData struct {
+	PollID,
 	Topic,
 	UserID,
 	Username string

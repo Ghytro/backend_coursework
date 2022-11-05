@@ -4,6 +4,7 @@ import (
 	"backend_coursework/internal/database"
 	"backend_coursework/internal/entity"
 	"context"
+	"fmt"
 
 	"github.com/go-pg/pg/v10"
 	"github.com/samber/lo"
@@ -53,7 +54,8 @@ func (r *PollsRepo) GetPoll(ctx context.Context, id entity.PK) (*entity.Poll, er
 
 func (r *PollsRepo) GetPollCreator(ctx context.Context, id entity.PK) (*entity.User, error) {
 	var p entity.Poll
-	return p.Creator, r.db.ModelContext(ctx, &p).Where("id = ?", id).Relation("Creator").Select()
+	p.ID = id
+	return p.Creator, r.db.ModelContext(ctx, &p).WherePK().Relation("Creator").Select()
 }
 
 func (r *PollsRepo) GetVotesAmount(ctx context.Context, id entity.PK) ([]*entity.PollOption, error) {
@@ -103,4 +105,44 @@ func (r *PollsRepo) UserVoted(ctx context.Context, userID entity.PK, pollID enti
 func (r *PollsRepo) GetUserPollVotes(ctx context.Context, userID entity.PK, pollID entity.PK) ([]*entity.Vote, error) {
 	var result []*entity.Vote
 	return result, r.db.ModelContext(ctx, &result).Where("user_id = ? AND poll_id = ?", userID, pollID).Select()
+}
+
+func (r *PollsRepo) Vote(ctx context.Context, userID entity.PK, pollID entity.PK, optionIdxs ...int) error {
+	return r.db.RunInTransaction(ctx, func(tx *database.TX) error {
+		var u entity.User
+		u.ID = userID
+		if err := tx.ModelContext(ctx, &u).WherePK().Select(); err != nil {
+			return fmt.Errorf("не найден пользователь с id %d", u.ID)
+		}
+		var p entity.Poll
+		p.ID = pollID
+		if err := tx.ModelContext(ctx, &p).WherePK().Relation("Options").Select(); err != nil {
+			return fmt.Errorf("не найден опрос с id %d", p.ID)
+		}
+		p.Options = lo.Filter(p.Options, func(opt *entity.PollOption, _ int) bool {
+			return lo.Contains(optionIdxs, opt.Index)
+		})
+		v := lo.Map(p.Options, func(opt *entity.PollOption, _ int) *entity.Vote {
+			return &entity.Vote{
+				UserID:   userID,
+				PollID:   pollID,
+				OptionID: opt.ID,
+			}
+		})
+		_, err := tx.ModelContext(ctx, &v).Insert()
+		return err
+	})
+}
+
+func (r *PollsRepo) Unvote(ctx context.Context, userID entity.PK, pollID entity.PK) error {
+	return r.db.RunInTransaction(ctx, func(tx *database.TX) error {
+		var p entity.Poll
+		p.ID = pollID
+		if err := tx.ModelContext(ctx, &p).WherePK().Relation("Options").Select(); err != nil {
+			return err
+		}
+		var v []*entity.Vote
+		_, err := tx.ModelContext(ctx, &v).Where("poll_id = ? AND user_id = ?", pollID, userID).Delete()
+		return err
+	})
 }

@@ -29,6 +29,7 @@ func (v *View) Routers(router fiber.Router, authHandler fiber.Handler, middlewar
 	r.Use(authHandler)
 	r.Get("/new/", v.newPollPage)
 	r.Get("/:id", v.getPoll)
+	r.Post("/:id/vote", v.vote)
 	r.Post("/", v.postNewPoll)
 	router.Mount("/polls", r)
 }
@@ -71,6 +72,7 @@ func (v *View) getPoll(c *fiber.Ctx) error {
 		return entity.ErrRespBadRequest(err)
 	}
 	viewData := GetPollViewData{
+		PollID:           fmt.Sprint(poll.ID),
 		Topic:            poll.Topic,
 		UserID:           fmt.Sprint(poll.Creator.ID),
 		Username:         poll.Creator.Username,
@@ -98,4 +100,30 @@ func (v *View) getPoll(c *fiber.Ctx) error {
 
 	tpl := templates.MustGet("polls/get.html")
 	return view.SendTemplate(c, tpl, viewData)
+}
+
+func (v *View) vote(c *fiber.Ctx) error {
+	pollID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return entity.ErrRespBadRequest(err)
+	}
+	f, err := c.MultipartForm()
+	if err != nil {
+		return entity.ErrRespInternalServerError(err)
+	}
+	idxs := lo.Map(f.Value["votes"], func(strIdx string, _ int) int {
+		i, _ := strconv.Atoi(strIdx)
+		return i
+	})
+	if lo.Contains(idxs, 0) {
+		return entity.ErrRespBadRequest(errors.New("значение выбранной опции может быть только числовым"))
+	}
+	user, ok := c.Locals("user_entity").(*entity.User)
+	if !ok {
+		return entity.ErrRespUnauthorized(errors.New("авторизуйтесь заново"))
+	}
+	if err := v.service.Vote(c.Context(), user.ID, entity.PK(pollID), idxs...); err != nil {
+		return entity.ErrRespBadRequest(err)
+	}
+	return c.Redirect(fmt.Sprintf("/votes/%d", pollID), fiber.StatusSeeOther)
 }

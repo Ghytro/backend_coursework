@@ -29,6 +29,7 @@ CREATE TABLE polls (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMPTZ
 );
+CREATE INDEX creator_id_polls_idx ON polls (creator_id);
 
 CREATE TABLE poll_options (
     id SERIAL PRIMARY KEY,
@@ -47,4 +48,4 @@ CREATE TABLE votes (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMPTZ
 );
-CREATE INDEX votes_user_id_option_id_idx ON votes (user_id, option_id);
+CREATE INDEX votes_user_id_option_id_poll_id_idx ON votes (user_id, option_id, poll_id);

@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/go-pg/pg/v10"
+	"github.com/samber/lo"
 )
 
 type Service struct {
@@ -75,4 +76,35 @@ func (s *Service) GetPollWithVotesAmount(ctx context.Context, id entity.PK, user
 		return err
 	})
 	return p, userVotes, err
+}
+
+func (s *Service) Vote(ctx context.Context, userID entity.PK, pollID entity.PK, optIdxs ...int) error {
+	if len(optIdxs) == 0 {
+		return nil
+	}
+	return s.repo.RunInTransaction(ctx, func(tx *database.TX) error {
+		repo := s.repo.WithTX(tx)
+
+		poll, err := repo.GetPoll(ctx, pollID)
+		if err != nil {
+			if err == pg.ErrNoRows {
+				return fmt.Errorf("не найден опрос с id %d", pollID)
+			}
+			return err
+		}
+
+		if len(optIdxs) > 1 && !poll.MultipleChoice {
+			return errors.New("на опросе не разрешен множественный выбор")
+		}
+
+		for _, i := range optIdxs {
+			if !lo.ContainsBy(poll.Options, func(o *entity.PollOption) bool {
+				return o.Index == i
+			}) {
+				return errors.New("выбрана опция, не присутствующая в опросе")
+			}
+		}
+
+		return repo.Vote(ctx, userID, pollID, optIdxs...)
+	})
 }

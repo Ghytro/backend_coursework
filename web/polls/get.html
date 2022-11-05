@@ -24,20 +24,54 @@
     </header>
     <div class="title">Опрос от <a href="/profile/{{.UserID}}">@{{.Username}}</a></div>
     <div class="content-container">
-        <form method="POST" action="/vote">
-            <div class="card">
+        <form method="POST" action="/polls/{{.PollID}}/vote">
+            <div class="card" id="card">
                 <div class="topic">{{.Topic}}</div>
-                {{range .Options}}
+                {{if .IsAnonymous}}
+                <div style="font-size: 18px;">Анонимный опрос</div>
+                {{end}}
+                {{if not .RevoteAbility}}
+                <div style="font-size: 18px;">Переголосовать нельзя</div>
+                {{end}}
+
+                {{ define "inc" }}{{ len (printf "%*s " . "") }}{{ end -}}
+
+                {{if .CurrentUserVoted}}
+                {{range $index, $opt := .Options}}
                 <div class="option">
-                    {{.Option}} ({{.VotesNumber}} голосов)
+                    {{$opt.Option}} ({{$opt.VotesNumber}} голосов)
                     <label>
-                        {{if .MultipleChoice}}
-                        <input type="checkbox">
+                        {{if $.MultipleChoice}}
+                        <input type="checkbox" name="votes" value="{{template "inc" $index}}"
+                        {{if  index $.CurrentUserVotes $index}}
+                        checked
+                        {{end}}
+                        disabled>
+
                         {{else}}
-                        <input type="radio">
+                        <input type="radio" name="votes" value="{{template "inc" $index}}"
+                        {{if index $.CurrentUserVotes $index}}
+                        checked
+                        {{end}}
+                        disabled>
                         {{end}}
                     </label>
                 </div>
+                {{end}}
+                {{else}}
+                {{range $index, $opt := .Options}}
+                <div class="option">
+                    {{$opt.Option}} ({{$opt.VotesNumber}} голосов)
+                    <label>
+                        {{if $.MultipleChoice}}
+                        <input type="checkbox" name="votes" value="{{template "inc" $index}}">
+                        {{else}}
+                        <input type="radio" name="votes" value="{{template "inc" $index}}">
+                        {{end}}
+                    </label>
+                </div>
+                {{end}}
+                <input type="submit" name="submit" value="Проголосовать">
                 {{end}}
             </div>
         </form>
