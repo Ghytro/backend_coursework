@@ -4,6 +4,7 @@ import (
 	"backend_coursework/internal/database"
 	"backend_coursework/internal/entity"
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/go-pg/pg/v10"
@@ -118,6 +119,17 @@ func (r *PollsRepo) Vote(ctx context.Context, userID entity.PK, pollID entity.PK
 		p.ID = pollID
 		if err := tx.ModelContext(ctx, &p).WherePK().Relation("Options").Select(); err != nil {
 			return fmt.Errorf("не найден опрос с id %d", p.ID)
+		}
+		if len(optionIdxs) > 1 && !p.MultipleChoice {
+			return errors.New("на опросе не разрешен множественный выбор")
+		}
+
+		for _, i := range optionIdxs {
+			if !lo.ContainsBy(p.Options, func(o *entity.PollOption) bool {
+				return o.Index == i
+			}) {
+				return errors.New("выбрана опция, не присутствующая в опросе")
+			}
 		}
 		p.Options = lo.Filter(p.Options, func(opt *entity.PollOption, _ int) bool {
 			return lo.Contains(optionIdxs, opt.Index)

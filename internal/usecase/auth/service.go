@@ -2,6 +2,7 @@ package auth
 
 import (
 	"backend_coursework/internal/entity"
+	"backend_coursework/internal/validation"
 	"context"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -41,6 +42,9 @@ func (s *Service) PatchAuth(ctx context.Context, username string, password strin
 }
 
 func (s *Service) Register(ctx context.Context, user *entity.User) (string, error) {
+	if err := validation.ValidateUser(user); err != nil {
+		return "", err
+	}
 	userID, err := s.repo.CreateUser(ctx, user)
 	if err != nil {
 		return "", err

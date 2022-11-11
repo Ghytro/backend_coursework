@@ -3,13 +3,11 @@ package polls
 import (
 	"backend_coursework/internal/database"
 	"backend_coursework/internal/entity"
+	"backend_coursework/internal/validation"
 	"backend_coursework/internal/view/polls"
 	"context"
-	"errors"
-	"fmt"
 
 	"github.com/go-pg/pg/v10"
-	"github.com/samber/lo"
 )
 
 type Service struct {
@@ -23,13 +21,9 @@ func NewService(repo Repository) *Service {
 }
 
 func (s *Service) CreatePoll(ctx context.Context, creatorID entity.PK, model *polls.NewPollRequest) (*entity.Poll, error) {
-	if model.Topic == "" {
-		return nil, errors.New("тема опроса пуста")
+	if err := validation.ValidateCreatedPoll(model); err != nil {
+		return nil, err
 	}
-	if len(model.Options) == 0 {
-		return nil, errors.New("у опроса нет вариантов ответа")
-	}
-	fmt.Println(*model)
 	p := &entity.Poll{
 		CreatorID:      creatorID,
 		Topic:          model.Topic,
@@ -84,27 +78,6 @@ func (s *Service) Vote(ctx context.Context, userID entity.PK, pollID entity.PK, 
 	}
 	return s.repo.RunInTransaction(ctx, func(tx *database.TX) error {
 		repo := s.repo.WithTX(tx)
-
-		poll, err := repo.GetPoll(ctx, pollID)
-		if err != nil {
-			if err == pg.ErrNoRows {
-				return fmt.Errorf("не найден опрос с id %d", pollID)
-			}
-			return err
-		}
-
-		if len(optIdxs) > 1 && !poll.MultipleChoice {
-			return errors.New("на опросе не разрешен множественный выбор")
-		}
-
-		for _, i := range optIdxs {
-			if !lo.ContainsBy(poll.Options, func(o *entity.PollOption) bool {
-				return o.Index == i
-			}) {
-				return errors.New("выбрана опция, не присутствующая в опросе")
-			}
-		}
-
 		return repo.Vote(ctx, userID, pollID, optIdxs...)
 	})
 }

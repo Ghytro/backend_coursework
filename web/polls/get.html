@@ -61,7 +61,11 @@
                 {{else}}
                 {{range $index, $opt := .Options}}
                 <div class="option">
+                    {{if .CurrentUserVoted}}
                     {{$opt.Option}} ({{$opt.VotesNumber}} голосов)
+                    {{else}}
+                    {{$opt.Option}}
+                    {{end}}
                     <label>
                         {{if $.MultipleChoice}}
                         <input type="checkbox" name="votes" value="{{template "inc" $index}}">
