@@ -24,7 +24,13 @@
     </header>
     <div class="title">Опрос от <a href="/profile/{{.UserID}}">@{{.Username}}</a></div>
     <div class="content-container">
-        <form method="POST" action="/polls/{{.PollID}}/vote">
+        <form method="POST" action="/polls/{{.PollID}}/
+        {{if not .CurrentUserVoted}}
+        vote
+        {{else}}
+        unvote
+        {{end}}
+        ">
             <div class="card" id="card">
                 <div class="topic">{{.Topic}}</div>
                 {{if .IsAnonymous}}
@@ -42,14 +48,14 @@
                     {{$opt.Option}} ({{$opt.VotesNumber}} голосов)
                     <label>
                         {{if $.MultipleChoice}}
-                        <input type="checkbox" name="votes" value="{{template "inc" $index}}"
+                        <input type="checkbox" value="{{template "inc" $index}}"
                         {{if  index $.CurrentUserVotes $index}}
                         checked
                         {{end}}
                         disabled>
 
                         {{else}}
-                        <input type="radio" name="votes" value="{{template "inc" $index}}"
+                        <input type="radio" value="{{template "inc" $index}}"
                         {{if index $.CurrentUserVotes $index}}
                         checked
                         {{end}}
@@ -58,19 +64,20 @@
                     </label>
                 </div>
                 {{end}}
+                <input type="submit" name="submit" value="Отменить голос">
                 {{else}}
                 {{range $index, $opt := .Options}}
                 <div class="option">
-                    {{if .CurrentUserVoted}}
+                    {{if $.CurrentUserVoted}}
                     {{$opt.Option}} ({{$opt.VotesNumber}} голосов)
                     {{else}}
                     {{$opt.Option}}
                     {{end}}
                     <label>
                         {{if $.MultipleChoice}}
-                        <input type="checkbox" name="votes" value="{{template "inc" $index}}">
+                        <input type="checkbox" name="votes[]" value="{{template "inc" $index}}">
                         {{else}}
-                        <input type="radio" name="votes" value="{{template "inc" $index}}">
+                        <input type="radio" name="votes[]" value="{{template "inc" $index}}">
                         {{end}}
                     </label>
                 </div>

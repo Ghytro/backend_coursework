@@ -67,7 +67,6 @@ func (v *View) getProfile(c *fiber.Ctx) error {
 	} else {
 		viewData.Bio = "<Статус пуст>"
 	}
-	viewData.HasRecentPolls = len(user.Polls) != 0
 	for _, p := range user.Polls {
 		pView := Poll{
 			CreatedAt: p.CreatedAt.Format("02.01.2006 15:04:05"),
@@ -120,7 +119,6 @@ func (v *View) getMyProfile(c *fiber.Ctx) error {
 	} else {
 		viewData.Bio = "<Статус пуст>"
 	}
-	viewData.HasRecentPolls = len(user.Polls) != 0
 	for _, p := range user.Polls {
 		pView := Poll{
 			CreatedAt: p.CreatedAt.Format("02.01.2006 15:04:05"),

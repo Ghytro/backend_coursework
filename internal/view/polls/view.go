@@ -109,7 +109,7 @@ func (v *View) vote(c *fiber.Ctx) error {
 	}
 	f, err := c.MultipartForm()
 	if err != nil {
-		return entity.ErrRespInternalServerError(err)
+		return entity.ErrRespBadRequest(err)
 	}
 	idxs := lo.Map(f.Value["votes"], func(strIdx string, _ int) int {
 		i, _ := strconv.Atoi(strIdx)
