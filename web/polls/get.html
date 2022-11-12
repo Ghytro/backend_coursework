@@ -24,13 +24,11 @@
     </header>
     <div class="title">Опрос от <a href="/profile/{{.UserID}}">@{{.Username}}</a></div>
     <div class="content-container">
-        <form method="POST" action="/polls/{{.PollID}}/
         {{if not .CurrentUserVoted}}
-        vote
+        <form method="POST" action="/polls/{{.PollID}}/vote">
         {{else}}
-        unvote
+        <form method="POST" action="/polls/{{.PollID}}/unvote">
         {{end}}
-        ">
             <div class="card" id="card">
                 <div class="topic">{{.Topic}}</div>
                 {{if .IsAnonymous}}
@@ -64,7 +62,9 @@
                     </label>
                 </div>
                 {{end}}
+                {{if .RevoteAbility}}
                 <input type="submit" name="submit" value="Отменить голос">
+                {{end}}
                 {{else}}
                 {{range $index, $opt := .Options}}
                 <div class="option">

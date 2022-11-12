@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/go-pg/pg/v10"
+	"github.com/google/uuid"
 	"github.com/samber/lo"
 )
 
@@ -94,12 +95,11 @@ func (r *PollsRepo) GetVotesAmount(ctx context.Context, id entity.PK) ([]*entity
 
 func (r *PollsRepo) GetPollsCreatedBy(ctx context.Context, userID entity.PK, limit, offset int) ([]*entity.Poll, error) {
 	var p []*entity.Poll
-	q := r.db.ModelContext(ctx, &p).Where("creator_id = ?", userID)
+	q := r.db.ModelContext(ctx, &p).Where("creator_id = ?", userID).Relation("Options")
 	if limit > 0 {
 		q = q.Limit(limit)
 	}
-	q = q.Offset(offset).Order("created_at")
-	return p, q.Select()
+	return p, q.Offset(offset).Order("created_at desc").Select()
 }
 
 func (r *PollsRepo) UserVoted(ctx context.Context, userID entity.PK, pollID entity.PK) (bool, error) {
@@ -146,6 +146,7 @@ func (r *PollsRepo) Vote(ctx context.Context, userID entity.PK, pollID entity.PK
 		})
 		v := lo.Map(p.Options, func(opt *entity.PollOption, _ int) *entity.Vote {
 			return &entity.Vote{
+				ID:       uuid.New(),
 				UserID:   userID,
 				PollID:   pollID,
 				OptionID: opt.ID,
@@ -162,6 +163,9 @@ func (r *PollsRepo) Unvote(ctx context.Context, userID entity.PK, pollID entity.
 		p.ID = pollID
 		if err := tx.ModelContext(ctx, &p).WherePK().Relation("Options").Select(); err != nil {
 			return err
+		}
+		if !p.RevoteAbility {
+			return errors.New("переголосование запрещено")
 		}
 		var v []*entity.Vote
 		_, err := tx.ModelContext(ctx, &v).Where("poll_id = ? AND user_id = ?", pollID, userID).Delete()

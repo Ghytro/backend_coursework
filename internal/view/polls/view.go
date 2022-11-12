@@ -30,7 +30,9 @@ func (v *View) Routers(router fiber.Router, authHandler fiber.Handler, middlewar
 	r.Get("/new/", v.newPollPage)
 	r.Get("/:id", v.getPoll)
 	r.Post("/:id/vote", v.vote)
+	r.Post("/:id/unvote", v.unvote)
 	r.Post("/", v.postNewPoll)
+	r.Get("/my/:page", v.getMyPolls)
 	router.Mount("/polls", r)
 }
 
@@ -103,27 +105,61 @@ func (v *View) getPoll(c *fiber.Ctx) error {
 }
 
 func (v *View) vote(c *fiber.Ctx) error {
-	pollID, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return entity.ErrRespBadRequest(err)
-	}
-	f, err := c.MultipartForm()
-	if err != nil {
-		return entity.ErrRespBadRequest(err)
-	}
-	idxs := lo.Map(f.Value["votes"], func(strIdx string, _ int) int {
-		i, _ := strconv.Atoi(strIdx)
-		return i
-	})
-	if lo.Contains(idxs, 0) {
-		return entity.ErrRespBadRequest(errors.New("значение выбранной опции может быть только числовым"))
-	}
 	user, ok := c.Locals("user_entity").(*entity.User)
 	if !ok {
 		return entity.ErrRespUnauthorized(errors.New("авторизуйтесь заново"))
 	}
+	pollID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return entity.ErrRespBadRequest(err)
+	}
+	var model VoteRequest
+	if err := c.BodyParser(&model); err != nil {
+		return entity.ErrRespBadRequest(err)
+	}
+	idxs := lo.Map(model.VotesIdxs, func(strIdx string, _ int) int {
+		i, err := strconv.Atoi(strIdx)
+		if err != nil {
+			i = -1
+		}
+		return i
+	})
+	if lo.Contains(idxs, -1) {
+		return entity.ErrRespBadRequest(errors.New("значение выбранной опции может быть только числовым"))
+	}
 	if err := v.service.Vote(c.Context(), user.ID, entity.PK(pollID), idxs...); err != nil {
 		return entity.ErrRespBadRequest(err)
 	}
-	return c.Redirect(fmt.Sprintf("/votes/%d", pollID), fiber.StatusSeeOther)
+	return c.Redirect(fmt.Sprintf("/polls/%d", pollID), fiber.StatusSeeOther)
+}
+
+func (v *View) unvote(c *fiber.Ctx) error {
+	user, ok := c.Locals("user_entity").(*entity.User)
+	if !ok {
+		return entity.ErrRespUnauthorized(errors.New("авторизуйтесь заново"))
+	}
+	pollID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return entity.ErrRespBadRequest(err)
+	}
+	if err := v.service.Unvote(c.Context(), user.ID, entity.PK(pollID)); err != nil {
+		return entity.ErrRespBadRequest(err)
+	}
+	return c.Redirect(fmt.Sprintf("/polls/%d", pollID), fiber.StatusSeeOther)
+}
+
+func (v *View) getMyPolls(c *fiber.Ctx) error {
+	user, ok := c.Locals("user_entity").(*entity.User)
+	if !ok {
+		return entity.ErrRespUnauthorized(errors.New("авторизуйтесь заново"))
+	}
+	page, err := strconv.Atoi(c.Params("page"))
+	if err != nil {
+		return entity.ErrRespBadRequest(err)
+	}
+	polls, err := v.service.GetMyPolls(c.Context(), user.ID, page)
+	if err != nil {
+		return entity.ErrRespBadRequest(err)
+	}
+	tpl := templates.MustGet("polls/my.html")
 }

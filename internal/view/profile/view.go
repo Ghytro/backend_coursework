@@ -80,6 +80,7 @@ func (v *View) getProfile(c *fiber.Ctx) error {
 		for _, o := range p.Options {
 			pView.Options = append(pView.Options, o.Option)
 		}
+		viewData.Polls = append(viewData.Polls, pView)
 	}
 	return view.SendTemplate(c, tpl, viewData)
 }
@@ -132,6 +133,7 @@ func (v *View) getMyProfile(c *fiber.Ctx) error {
 		for _, o := range p.Options {
 			pView.Options = append(pView.Options, o.Option)
 		}
+		viewData.Polls = append(viewData.Polls, pView)
 	}
 	return view.SendTemplate(c, tpl, viewData)
 }

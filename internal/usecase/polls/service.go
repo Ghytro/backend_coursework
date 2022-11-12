@@ -81,3 +81,7 @@ func (s *Service) Vote(ctx context.Context, userID entity.PK, pollID entity.PK, 
 		return repo.Vote(ctx, userID, pollID, optIdxs...)
 	})
 }
+
+func (s *Service) Unvote(ctx context.Context, userID entity.PK, pollID entity.PK) error {
+	return s.repo.Unvote(ctx, userID, pollID)
+}

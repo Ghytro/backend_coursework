@@ -8,6 +8,10 @@ type NewPollRequest struct {
 	CantRevote     string   `form:"cant_revote"`
 }
 
+type VoteRequest struct {
+	VotesIdxs []string `form:"votes"`
+}
+
 type GetPollViewData struct {
 	PollID,
 	Topic,
@@ -23,4 +27,17 @@ type GetPollViewData struct {
 
 type Option struct {
 	Option, VotesNumber string
+}
+
+type GetMyPollsViewData struct {
+	Polls []Poll
+}
+
+type Poll struct {
+	ID,
+	CreatedAt,
+	Title string
+	IsAnonymous, RevoteAbility, MultipleChoice bool
+
+	Options []string
 }

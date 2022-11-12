@@ -44,9 +44,9 @@
             <div class="recent-polls-title">Недавно созданные опросы:</div>
             {{range .Polls}}
             <div class="poll-card">
-                <div class="poll-created-at">{ .CreatedAt }</div>
-                <div class="poll-title">{ .Title }</div>
-                <div class="is-anonymous">{ .IsAnonymousStr }</div>
+                <div class="poll-created-at">{{ .CreatedAt }}</div>
+                <div class="poll-title">{{ .Title }}</div>
+                <div class="is-anonymous">{{ .IsAnonymousStr }}</div>
                 {{range .Options}}
                 <div class="poll-unvoted-option">{{ . }}</div>
                 {{end}}

@@ -13,6 +13,7 @@ func init() {
 	templates, err = view.GenTemplatesMap(
 		"polls/new.html",
 		"polls/get.html",
+		"polls/my.html",
 	)
 	common.LogFatalErr(err)
 }
