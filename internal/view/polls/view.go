@@ -162,4 +162,6 @@ func (v *View) getMyPolls(c *fiber.Ctx) error {
 		return entity.ErrRespBadRequest(err)
 	}
 	tpl := templates.MustGet("polls/my.html")
+	viewData := GetMyPollsViewData{}
+	view.SendTemplate(c, tpl)
 }
