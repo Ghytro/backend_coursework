@@ -98,7 +98,7 @@ func (r *PollsRepo) GetPollsCreatedBy(ctx context.Context, userID entity.PK, lim
 	if limit > 0 {
 		q = q.Limit(limit)
 	}
-	q = q.Offset(offset)
+	q = q.Offset(offset).Order("created_at")
 	return p, q.Select()
 }
 

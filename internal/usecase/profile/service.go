@@ -37,7 +37,7 @@ func (s *Service) GetUserWithPolls(ctx context.Context, userID entity.PK, limit 
 		if err != nil {
 			return err
 		}
-		polls, err := pollsRepo.GetPollsCreatedBy(ctx, userID, 5, 0)
+		polls, err := pollsRepo.GetPollsCreatedBy(ctx, userID, limit, 0)
 		if err != nil {
 			return err
 		}
