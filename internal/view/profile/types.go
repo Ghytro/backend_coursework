@@ -7,8 +7,7 @@ type AnyProfileViewData struct {
 	CountryFullName,
 	Bio string
 
-	HasRecentPolls bool
-	Polls          []Poll
+	Polls []Poll
 }
 
 type Poll struct {
@@ -26,6 +25,5 @@ type MyProfileViewData struct {
 	CountryFullName,
 	Bio string
 
-	HasRecentPolls bool
-	Polls          []Poll
+	Polls []Poll
 }

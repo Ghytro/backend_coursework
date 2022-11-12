@@ -92,6 +92,16 @@ func (r *PollsRepo) GetVotesAmount(ctx context.Context, id entity.PK) ([]*entity
 	return options, nil
 }
 
+func (r *PollsRepo) GetPollsCreatedBy(ctx context.Context, userID entity.PK, limit, offset int) ([]*entity.Poll, error) {
+	var p []*entity.Poll
+	q := r.db.ModelContext(ctx, &p).Where("creator_id = ?", userID)
+	if limit > 0 {
+		q = q.Limit(limit)
+	}
+	q = q.Offset(offset)
+	return p, q.Select()
+}
+
 func (r *PollsRepo) UserVoted(ctx context.Context, userID entity.PK, pollID entity.PK) (bool, error) {
 	var vote entity.Vote
 	if err := r.db.ModelContext(ctx, &vote).Where("user_id = ? AND poll_id = ?", userID, pollID).Select(); err != nil {

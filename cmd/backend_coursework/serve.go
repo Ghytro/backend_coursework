@@ -25,13 +25,13 @@ func serve() {
 	jwtSecret := []byte("")
 
 	profileRepo := repository.NewUserRepo(db)
-	profileService := profileService.NewService(profileRepo)
+	pollRepo := repository.NewPollsRepo(db)
+	profileService := profileService.NewService(profileRepo, pollRepo)
 	profileView := profileView.NewView(profileService)
 
 	authService := authService.NewService(profileRepo, jwtSecret)
 	authView := authView.NewView(authService)
 
-	pollRepo := repository.NewPollsRepo(db)
 	pollService := pollsService.NewService(pollRepo)
 	pollsView := pollsView.NewView(pollService)
 	NewApp(

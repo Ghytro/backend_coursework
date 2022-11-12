@@ -1,17 +1,20 @@
 package profile
 
 import (
+	"backend_coursework/internal/database"
 	"backend_coursework/internal/entity"
 	"context"
 )
 
 type Service struct {
-	repo ProfileRepo
+	repo      ProfileRepo
+	pollsRepo PollsRepo
 }
 
-func NewService(repo ProfileRepo) *Service {
+func NewService(repo ProfileRepo, pollsRepo PollsRepo) *Service {
 	return &Service{
-		repo: repo,
+		repo:      repo,
+		pollsRepo: pollsRepo,
 	}
 }
 
@@ -24,7 +27,24 @@ func (s *Service) GetUser(ctx context.Context, userID entity.PK) (*entity.User, 
 }
 
 func (s *Service) GetUserWithPolls(ctx context.Context, userID entity.PK, limit int) (*entity.User, error) {
-	return s.repo.GetUserWithPolls(ctx, userID, limit)
+	var u *entity.User
+	err := s.repo.RunInTransaction(ctx, func(tx *database.TX) error {
+		repo := s.repo.WithTX(tx)
+		pollsRepo := s.pollsRepo.WithTX(tx)
+
+		var err error
+		u, err = repo.GetUser(ctx, userID)
+		if err != nil {
+			return err
+		}
+		polls, err := pollsRepo.GetPollsCreatedBy(ctx, userID, 5, 0)
+		if err != nil {
+			return err
+		}
+		u.Polls = polls
+		return nil
+	})
+	return u, err
 }
 
 func (s *Service) UpdateUser(ctx context.Context, user *entity.User) error {
