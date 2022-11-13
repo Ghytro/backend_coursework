@@ -1,5 +1,7 @@
 package polls
 
+import "backend_coursework/internal/entity"
+
 type NewPollRequest struct {
 	Topic          string   `form:"topic"`
 	Options        []string `form:"options"`
@@ -42,4 +44,22 @@ type Poll struct {
 	IsAnonymous, RevoteAbility, MultipleChoice bool
 
 	Options []string
+}
+
+type TrendingPoll struct {
+	*entity.Poll
+	VoteAmount int
+}
+
+type TrendingPollsViewData struct {
+	Polls []*TrendingPollView
+}
+
+type TrendingPollView struct {
+	ID, Title, CreatedAt, VoteAmount string
+
+	Options []string
+
+	IsAnonymous, RevoteAbility,
+	MultipleChoice bool
 }

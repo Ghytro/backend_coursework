@@ -46,7 +46,7 @@ func (v *View) getProfile(c *fiber.Ctx) error {
 		return entity.ErrRespBadRequest(err)
 	}
 	tpl := templates.MustGet("profile/any.html")
-	viewData := AnyProfileViewData{
+	viewData := &AnyProfileViewData{
 		Username: user.Username,
 	}
 	if user.FirstName != nil {
@@ -98,7 +98,7 @@ func (v *View) getMyProfile(c *fiber.Ctx) error {
 		return entity.ErrRespInternalServerError(err)
 	}
 	tpl := templates.MustGet("profile/my.html")
-	viewData := MyProfileViewData{
+	viewData := &MyProfileViewData{
 		Username: user.Username,
 	}
 	if user.FirstName != nil {

@@ -52,3 +52,7 @@ func GetCountryByAlpha2(alpha2 string) *countries.Country {
 	}
 	return nil
 }
+
+type Range[T any] struct {
+	From, To T
+}

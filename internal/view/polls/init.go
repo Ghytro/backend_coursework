@@ -14,6 +14,7 @@ func init() {
 		"polls/new.html",
 		"polls/get.html",
 		"polls/my.html",
+		"polls/trending.html",
 	)
 	common.LogFatalErr(err)
 }

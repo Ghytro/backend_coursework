@@ -1,11 +1,13 @@
 package repository
 
 import (
+	"backend_coursework/internal/common"
 	"backend_coursework/internal/database"
 	"backend_coursework/internal/entity"
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/go-pg/pg/v10"
 	"github.com/google/uuid"
@@ -171,4 +173,42 @@ func (r *PollsRepo) Unvote(ctx context.Context, userID entity.PK, pollID entity.
 		_, err := tx.ModelContext(ctx, &v).Where("poll_id = ? AND user_id = ?", pollID, userID).Delete()
 		return err
 	})
+}
+
+type PollSearchFilter struct {
+	CreatedAt *common.Range[time.Time]
+	CreatorID entity.PK
+	IDs       []entity.PK
+}
+
+func (r *PollsRepo) GetPollListSearch(ctx context.Context, filter *PollSearchFilter) ([]*entity.Poll, error) {
+	var p []*entity.Poll
+	q := r.db.ModelContext(ctx, &p)
+	if len(filter.IDs) > 0 {
+		q = q.Where("poll.id IN (?)", pg.In(filter.IDs))
+	}
+	if filter.CreatedAt != nil {
+		q = q.Where("created_at >= ? AND created_at <= ?", filter.CreatedAt.From, filter.CreatedAt.To)
+	}
+	if filter.CreatorID != 0 {
+		q = q.Where("creator_id = ?", filter.CreatorID)
+	}
+	return p, q.Relation("Options").Select()
+}
+
+type VoteSearchFilter struct {
+	CreatedAt *common.Range[time.Time]
+	PollID    entity.PK // что придумал
+}
+
+func (r *PollsRepo) GetVoteListSearch(ctx context.Context, filter *VoteSearchFilter) ([]*entity.Vote, error) {
+	var v []*entity.Vote
+	q := r.db.ModelContext(ctx, &v)
+	if filter.CreatedAt != nil {
+		q = q.Where("created_at >= ? AND created_at <= ?", filter.CreatedAt.From, filter.CreatedAt.To)
+	}
+	if filter.PollID != 0 {
+		q = q.Where("poll_id = ?", filter.PollID)
+	}
+	return v, q.Select()
 }

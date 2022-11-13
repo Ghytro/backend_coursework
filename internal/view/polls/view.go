@@ -28,6 +28,7 @@ func (v *View) Routers(router fiber.Router, authHandler fiber.Handler, middlewar
 	}
 	r.Use(authHandler)
 	r.Get("/new/", v.newPollPage)
+	r.Get("/trending/:page", v.getTrending)
 	r.Get("/my/:page", v.getMyPolls)
 	r.Get("/:id", v.getPoll)
 	r.Post("/:id/vote", v.vote)
@@ -73,7 +74,7 @@ func (v *View) getPoll(c *fiber.Ctx) error {
 	if err != nil {
 		return entity.ErrRespBadRequest(err)
 	}
-	viewData := GetPollViewData{
+	viewData := &GetPollViewData{
 		PollID:           fmt.Sprint(poll.ID),
 		Topic:            poll.Topic,
 		UserID:           fmt.Sprint(poll.Creator.ID),
@@ -190,7 +191,7 @@ func (v *View) getMyPolls(c *fiber.Ctx) error {
 	}
 
 	tpl := templates.MustGet("polls/my.html")
-	viewData := GetMyPollsViewData{
+	viewData := &GetMyPollsViewData{
 		PageNumber:     fmt.Sprint(page),
 		PageSize:       fmt.Sprint(pageSize),
 		PrevPageNumber: prevPage,
@@ -206,6 +207,32 @@ func (v *View) getMyPolls(c *fiber.Ctx) error {
 				Options: lo.Map(p.Options, func(opt *entity.PollOption, _ int) string {
 					return opt.Option
 				}),
+			}
+		}),
+	}
+	return view.SendTemplate(c, tpl, viewData)
+}
+
+func (v *View) getTrending(c *fiber.Ctx) error {
+	trending, err := v.service.GetTrending(c.Context(), 1, 10)
+	if err != nil {
+		return entity.ErrRespBadRequest(err)
+	}
+
+	tpl := templates.MustGet("polls/trending.html")
+
+	viewData := &TrendingPollsViewData{
+		Polls: lo.Map(trending, func(p *TrendingPoll, _ int) *TrendingPollView {
+			return &TrendingPollView{
+				ID:         fmt.Sprint(p.ID),
+				VoteAmount: fmt.Sprint(p.VoteAmount),
+				Title:      p.Topic,
+				Options: lo.Map(p.Options, func(opt *entity.PollOption, _ int) string {
+					return opt.Option
+				}),
+				IsAnonymous:    p.IsAnonymous,
+				RevoteAbility:  p.RevoteAbility,
+				MultipleChoice: p.MultipleChoice,
 			}
 		}),
 	}

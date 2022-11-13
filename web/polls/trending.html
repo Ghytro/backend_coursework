@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/styles/reset.css">
     <link rel="stylesheet" href="/styles/common.css">
-    <link rel="stylesheet" href="/styles/profile.css">
-    <title>@{{.Username}}</title>
+    <link rel="stylesheet" href="/styles/poll-my.css">
+    <title>В тренде</title>
 </head>
 <body>
     <header>
@@ -22,41 +22,28 @@
             <a class="smooth-underline" href="/polls/new">Создать опрос</a>
         </div>
     </header>
+    <div class="title">В тренде</div>
     <div class="content-container">
-        <div class="profile-info-container">
-            <div class="avatar">
-                <img src="https://www.clevelanddentalhc.com/wp-content/uploads/2018/03/sample-avatar.jpg">
-            </div>
-            <div class="profile-info">
-                <div class="full-name">{{.FullName}}</div>
-                <div class="username">@{{.Username}}</div>
-                <div class="country">
-                    <div style="height: 25px">
-                        <img src="/flags/{{.CountryCode}}.png" width="35px">
-                    </div>
-                    <div style="margin-left: 7px">{{.CountryFullName}}</div>
-                </div>
-                <hr>
-                <div class="bio">{{.Bio}}</div>
-            </div> 
-        </div>
-        {{if .Polls}}
-        <div class="poll-list">
-            <div class="recent-polls-title">Недавно созданные опросы:</div>
-            {{range .Polls}}
+        {{range .Polls}}
+        <a class="card-link" href="/polls/{{.ID}}">
             <div class="poll-card">
                 <div class="poll-created-at">{{ .CreatedAt }}</div>
                 <div class="poll-title">{{ .Title }}</div>
-                <div class="is-anonymous">{{ .IsAnonymousStr }}</div>
-                <div class="is-anonymous"></div>
+                <div style="font-size: 20px">{{.VoteAmount}} голосов за последние сутки</div>
+                {{if .IsAnonymous}}
+                <div class="is-anonymous">Анонимный опрос</div>
+                {{end}}
+                {{if not .RevoteAbility}}
+                <div class="is-anonymous">Переголосвать нельзя</div>
+                {{end}}
+                {{if .MultipleChoice}}
+                <div class="is-anonymous">Множественный выбор</div>
+                {{end}}
                 {{range .Options}}
                 <div class="poll-unvoted-option">{{ . }}</div>
                 {{end}}
             </div>
-            {{end}}
-        </div>
-        {{else}}
-        <div class="recent-polls-title">Нет недавно созданных опросов</div>
+        </a>
         {{end}}
     </div>
 </body>

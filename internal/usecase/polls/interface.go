@@ -12,7 +12,8 @@ type Reader interface {
 	GetPollCreator(ctx context.Context, id entity.PK) (*entity.User, error)
 	GetVotesAmount(ctx context.Context, id entity.PK) ([]*entity.PollOption, error)
 	GetUserPollVotes(ctx context.Context, userID entity.PK, pollID entity.PK) ([]*entity.Vote, error)
-	GetPollsCreatedBy(ctx context.Context, userID entity.PK, limit, offset int) ([]*entity.Poll, error)
+	GetPollListSearch(ctx context.Context, filter *repository.PollSearchFilter) ([]*entity.Poll, error)
+	GetVoteListSearch(ctx context.Context, filter *repository.VoteSearchFilter) ([]*entity.Vote, error)
 }
 
 type Writer interface {

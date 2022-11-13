@@ -1,22 +1,66 @@
 package polls
 
 import (
+	"backend_coursework/internal/common"
 	"backend_coursework/internal/database"
 	"backend_coursework/internal/entity"
+	"backend_coursework/internal/repository"
 	"backend_coursework/internal/validation"
 	"backend_coursework/internal/view/polls"
 	"context"
+	"fmt"
+	"log"
+	"sort"
+	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/go-pg/pg/v10"
+	"github.com/samber/lo"
 )
 
+type trendingCache struct {
+	Lock      sync.Mutex
+	ExpiresAt time.Time
+	Polls     []*polls.TrendingPoll
+	IsUpdated int32
+}
+
+func (c *trendingCache) GetPage(page, pageSize int) []*polls.TrendingPoll {
+	c.Lock.Lock()
+	defer c.Lock.Unlock()
+	startIdx, endIdx := (page-1)*pageSize, page*pageSize
+	if startIdx < 0 {
+		startIdx = 0
+	}
+	if endIdx > len(c.Polls) {
+		endIdx = len(c.Polls)
+	}
+	result := make([]*polls.TrendingPoll, endIdx-startIdx)
+	copy(result, c.Polls[startIdx:endIdx])
+	return result
+}
+
+// Update не копирует список новых голосов а просто присваивает ссылку
+func (c *trendingCache) Update(p []*polls.TrendingPoll) {
+	c.Lock.Lock()
+	defer c.Lock.Unlock()
+	c.Polls = p
+	c.ExpiresAt = time.Now().Add(time.Hour)
+}
+
 type Service struct {
-	repo Repository
+	repo               Repository
+	trendingPollsCache trendingCache
 }
 
 func NewService(repo Repository) *Service {
 	return &Service{
 		repo: repo,
+		trendingPollsCache: trendingCache{
+			ExpiresAt: time.Now().Add(-time.Second), // чтобы сразу протух
+			Polls:     make([]*polls.TrendingPoll, 0),
+		},
 	}
 }
 
@@ -87,5 +131,86 @@ func (s *Service) Unvote(ctx context.Context, userID entity.PK, pollID entity.PK
 }
 
 func (s *Service) GetMyPolls(ctx context.Context, userID entity.PK, page, pageSize int) ([]*entity.Poll, error) {
-	return s.repo.GetPollsCreatedBy(ctx, userID, pageSize, (page-1)*pageSize)
+	return s.repo.GetPollListSearch(ctx, &repository.PollSearchFilter{
+		CreatorID: userID,
+	})
+}
+
+func (s *Service) updateCache() {
+	currTime := time.Now()
+	atomic.StoreInt32(&s.trendingPollsCache.IsUpdated, 1)
+	defer func() {
+		atomic.StoreInt32(&s.trendingPollsCache.IsUpdated, 0)
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	var trendingPolls []*polls.TrendingPoll
+	if err := s.repo.RunInTransaction(ctx, func(tx *database.TX) error {
+		repo := s.repo.WithTX(tx)
+		votes, err := repo.GetVoteListSearch(ctx, &repository.VoteSearchFilter{
+			CreatedAt: &common.Range[time.Time]{
+				From: currTime.Add(-(24 * time.Hour)),
+				To:   currTime,
+			},
+		})
+		if err != nil {
+			return err
+		}
+		m := make(map[entity.PK]int) // посчитаем количество самых популярных опросов
+		for _, v := range votes {
+			m[v.PollID]++
+		}
+		// отсортируем
+		pollsWithVotes := lo.MapToSlice(m, func(key entity.PK, value int) struct {
+			PollID entity.PK
+			Amount int
+		} {
+			return struct {
+				PollID entity.PK
+				Amount int
+			}{
+				PollID: key,
+				Amount: value,
+			}
+		})
+		pollIds := lo.Map(pollsWithVotes, func(el struct {
+			PollID entity.PK
+			Amount int
+		}, _ int) entity.PK {
+			return el.PollID
+		})
+		pollsList, err := repo.GetPollListSearch(ctx, &repository.PollSearchFilter{
+			IDs: pollIds,
+		})
+		if err != nil {
+			return err
+		}
+		trendingPolls = lo.Map(pollsList, func(p *entity.Poll, _ int) *polls.TrendingPoll {
+			return &polls.TrendingPoll{
+				Poll:       p,
+				VoteAmount: m[p.ID],
+			}
+		})
+		sort.Slice(trendingPolls, func(i, j int) bool {
+			return trendingPolls[i].VoteAmount > trendingPolls[j].VoteAmount
+		})
+		return nil
+	}); err != nil {
+		log.Printf("unable to update poll cache: %v\n", err)
+		s.trendingPollsCache.ExpiresAt = currTime.Add(time.Second * 10) // попробуй еще раз через 10 секунд
+		return
+	}
+	s.trendingPollsCache.Update(trendingPolls)
+}
+
+func (s *Service) GetTrending(ctx context.Context, pageNumber, pageSize int) ([]*polls.TrendingPoll, error) {
+	currTime := time.Now()
+	result := s.trendingPollsCache.GetPage(pageNumber, pageSize)
+	fmt.Println(result)
+	if currTime.After(s.trendingPollsCache.ExpiresAt) && atomic.LoadInt32(&s.trendingPollsCache.IsUpdated) == 0 {
+		go s.updateCache()
+	}
+	return result, nil
 }
