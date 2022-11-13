@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles/reset.css">
+    <link rel="stylesheet" href="/styles/common.css">
+    <link rel="stylesheet" href="/styles/poll-my.css">
+    <title>Мои опросы</title>
+</head>
+<body>
+    <header>
+        <form action="/search" method="GET" style="float: left; width: 30%; margin: 0 auto;">
+            <input class="searchbar" type="text" name="query" placeholder="Поиск...">
+            <input class="searchbar-submit" type="submit" value="Найти">
+        </form>
+        <div class="header-right">
+            <a class="smooth-underline" href="/profile">Профиль</a>
+            <a class="smooth-underline" href="/">В тренде</a>
+            <a class="smooth-underline" href="/polls/my/1?psize=10">Мои опросы</a>
+            <a class="smooth-underline" href="/polls/new">Создать опрос</a>
+        </div>
+    </header>
+    <div class="title">Мои опросы</div>
+    <div class="content-container">
+        {{range .Polls}}
+        <a class="card-link" href="/polls/{{.ID}}">
+            <div class="poll-card">
+                <div class="poll-created-at">{{ .CreatedAt }}</div>
+                <div class="poll-title">{{ .Title }}</div>
+                {{if .IsAnonymous}}
+                <div class="is-anonymous">Анонимный опрос</div>
+                {{end}}
+                {{if not .RevoteAbility}}
+                <div class="is-anonymous">Переголосвать нельзя</div>
+                {{end}}
+                {{if .MultipleChoice}}
+                <div class="is-anonymous">Множественный выбор</div>
+                {{end}}
+                {{range .Options}}
+                <div class="poll-unvoted-option">{{ . }}</div>
+                {{end}}
+            </div>
+        </a>
+        {{else}}
+        У вас нет опросов
+        {{end}}
+        {{if .Polls}}
+        <div class="page-switch-container">
+            <a class="arrow" href="/polls/my/{{.PrevPageNumber}}?psize={{.PageSize}}">&lt;</a>
+            &nbsp;{{.PageNumber}}&nbsp;
+            <a class="arrow" href="/polls/my/{{.NextPageNumber}}?psize={{.PageSize}}">&gt;</a>
+        </div>
+        {{end}}
+    </div>
+</body>
+</html>

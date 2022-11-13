@@ -30,7 +30,9 @@ type Option struct {
 }
 
 type GetMyPollsViewData struct {
-	Polls []Poll
+	PageNumber, PageSize           string
+	PrevPageNumber, NextPageNumber string
+	Polls                          []Poll
 }
 
 type Poll struct {

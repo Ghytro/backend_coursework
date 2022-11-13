@@ -85,3 +85,7 @@ func (s *Service) Vote(ctx context.Context, userID entity.PK, pollID entity.PK, 
 func (s *Service) Unvote(ctx context.Context, userID entity.PK, pollID entity.PK) error {
 	return s.repo.Unvote(ctx, userID, pollID)
 }
+
+func (s *Service) GetMyPolls(ctx context.Context, userID entity.PK, page, pageSize int) ([]*entity.Poll, error) {
+	return s.repo.GetPollsCreatedBy(ctx, userID, pageSize, (page-1)*pageSize)
+}

@@ -10,5 +10,5 @@ type UseCase interface {
 	GetPollWithVotesAmount(ctx context.Context, id entity.PK, userID entity.PK) (*entity.Poll, []*entity.Vote, error)
 	Vote(ctx context.Context, userID entity.PK, pollID entity.PK, optIdxs ...int) error
 	Unvote(ctx context.Context, userID entity.PK, pollID entity.PK) error
-	GetMyPolls(ctx context.Context, userID entity.PK, page int) ([]*entity.Poll, error)
+	GetMyPolls(ctx context.Context, userID entity.PK, page, pageSize int) ([]*entity.Poll, error)
 }

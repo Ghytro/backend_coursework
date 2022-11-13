@@ -28,11 +28,11 @@ func (v *View) Routers(router fiber.Router, authHandler fiber.Handler, middlewar
 	}
 	r.Use(authHandler)
 	r.Get("/new/", v.newPollPage)
+	r.Get("/my/:page", v.getMyPolls)
 	r.Get("/:id", v.getPoll)
 	r.Post("/:id/vote", v.vote)
-	r.Post("/:id/unvote", v.unvote)
 	r.Post("/", v.postNewPoll)
-	r.Get("/my/:page", v.getMyPolls)
+	r.Post("/:id/unvote", v.unvote)
 	router.Mount("/polls", r)
 }
 
@@ -153,15 +153,61 @@ func (v *View) getMyPolls(c *fiber.Ctx) error {
 	if !ok {
 		return entity.ErrRespUnauthorized(errors.New("авторизуйтесь заново"))
 	}
+
 	page, err := strconv.Atoi(c.Params("page"))
 	if err != nil {
 		return entity.ErrRespBadRequest(err)
 	}
-	polls, err := v.service.GetMyPolls(c.Context(), user.ID, page)
+	if page <= 0 {
+		return entity.ErrRespBadRequest(errors.New("некорректное значение номера страницы"))
+	}
+
+	pageSize, err := strconv.Atoi(c.Query("psize"))
 	if err != nil {
 		return entity.ErrRespBadRequest(err)
 	}
+	if pageSize < 1 {
+		return entity.ErrRespBadRequest(errors.New("некорректное значение размера страницы"))
+	}
+
+	polls, err := v.service.GetMyPolls(c.Context(), user.ID, page, pageSize)
+	if err != nil {
+		return entity.ErrRespBadRequest(err)
+	}
+
+	nextPolls, err := v.service.GetMyPolls(c.Context(), user.ID, page+1, pageSize)
+	if err != nil {
+		return entity.ErrRespBadRequest(err)
+	}
+
+	prevPage := "1"
+	if page > 1 {
+		prevPage = fmt.Sprint(page - 1)
+	}
+	nextPage := fmt.Sprint(page)
+	if len(nextPolls) > 0 {
+		nextPage = fmt.Sprint(page + 1)
+	}
+
 	tpl := templates.MustGet("polls/my.html")
-	viewData := GetMyPollsViewData{}
-	view.SendTemplate(c, tpl)
+	viewData := GetMyPollsViewData{
+		PageNumber:     fmt.Sprint(page),
+		PageSize:       fmt.Sprint(pageSize),
+		PrevPageNumber: prevPage,
+		NextPageNumber: nextPage,
+		Polls: lo.Map(polls, func(p *entity.Poll, _ int) Poll {
+			return Poll{
+				ID:             fmt.Sprint(p.ID),
+				Title:          p.Topic,
+				CreatedAt:      p.CreatedAt.Format("02.01.2006 15:04:05"),
+				IsAnonymous:    p.IsAnonymous,
+				RevoteAbility:  p.RevoteAbility,
+				MultipleChoice: p.MultipleChoice,
+				Options: lo.Map(p.Options, func(opt *entity.PollOption, _ int) string {
+					return opt.Option
+				}),
+			}
+		}),
+	}
+	return view.SendTemplate(c, tpl, viewData)
 }

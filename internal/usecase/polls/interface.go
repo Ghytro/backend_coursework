@@ -12,6 +12,7 @@ type Reader interface {
 	GetPollCreator(ctx context.Context, id entity.PK) (*entity.User, error)
 	GetVotesAmount(ctx context.Context, id entity.PK) ([]*entity.PollOption, error)
 	GetUserPollVotes(ctx context.Context, userID entity.PK, pollID entity.PK) ([]*entity.Vote, error)
+	GetPollsCreatedBy(ctx context.Context, userID entity.PK, limit, offset int) ([]*entity.Poll, error)
 }
 
 type Writer interface {
