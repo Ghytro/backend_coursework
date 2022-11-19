@@ -1,12 +1,14 @@
 package repository
 
 import (
+	"backend_coursework/internal/common"
 	"backend_coursework/internal/database"
 	"backend_coursework/internal/entity"
 	"context"
 	"errors"
 
 	"github.com/go-pg/pg/v10"
+	"github.com/go-pg/pg/v10/orm"
 	"github.com/samber/lo"
 )
 
@@ -134,4 +136,32 @@ func (m *UserRepository) Auth(ctx context.Context, username string, password str
 		return 0, err
 	}
 	return u.ID, nil
+}
+
+type UserSearchFilter struct {
+	IDs      []entity.PK
+	UserName *common.StringDataFilter
+	PageData *common.PageData
+}
+
+func (f UserSearchFilter) Apply(q *orm.Query) {
+	if f.UserName != nil {
+		f.UserName.Apply(q, "username")
+	}
+	if len(f.IDs) > 0 {
+		q.Where("id in (?)", pg.In(f.IDs))
+	}
+	if f.PageData != nil {
+		q.Limit(f.PageData.PageSize).Offset((f.PageData.Page - 1) * f.PageData.PageSize)
+	}
+}
+
+func (m *UserRepository) GetUserListSearch(ctx context.Context, filter *UserSearchFilter) ([]*entity.User, error) {
+	var u []*entity.User
+	err := m.db.RunInTransaction(ctx, func(tx *database.TX) error {
+		q := tx.ModelContext(ctx, &u)
+		filter.Apply(q)
+		return q.Select()
+	})
+	return u, err
 }

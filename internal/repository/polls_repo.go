@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-pg/pg/v10"
+	"github.com/go-pg/pg/v10/orm"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
 )
@@ -176,24 +177,49 @@ func (r *PollsRepo) Unvote(ctx context.Context, userID entity.PK, pollID entity.
 }
 
 type PollSearchFilter struct {
-	CreatedAt *common.Range[time.Time]
-	CreatorID entity.PK
-	IDs       []entity.PK
+	CreatedAt                                  *common.Range[time.Time]
+	CreatorID                                  entity.PK
+	IDs                                        []entity.PK
+	IsAnonymous, RevoteAbility, MultipleChoice *bool
+	Topic, CreatorUserName                     *common.StringDataFilter
+	PageData                                   *common.PageData
+}
+
+func (filter *PollSearchFilter) Apply(q *orm.Query) {
+	if len(filter.IDs) > 0 {
+		q.Where("poll.id IN (?)", pg.In(filter.IDs))
+	}
+	if filter.CreatedAt != nil {
+		q.Where("created_at >= ? AND created_at <= ?", filter.CreatedAt.From, filter.CreatedAt.To)
+	}
+	if filter.CreatorID != 0 {
+		q.Where("creator_id = ?", filter.CreatorID)
+	}
+	if filter.IsAnonymous != nil {
+		q.Where("is_anonymous = ?", *filter.IsAnonymous)
+	}
+	if filter.MultipleChoice != nil {
+		q.Where("multiple_choice = ?", *filter.MultipleChoice)
+	}
+	if filter.RevoteAbility != nil {
+		q.Where("revote_ability = ?", *filter.RevoteAbility)
+	}
+	if filter.Topic != nil {
+		filter.Topic.Apply(q, "topic")
+	}
+	if filter.CreatorUserName != nil {
+		filter.CreatorUserName.Apply(q, "username")
+	}
+	if filter.PageData != nil {
+		q.Limit(filter.PageData.PageSize).Offset((filter.PageData.Page - 1) * filter.PageData.PageSize)
+	}
 }
 
 func (r *PollsRepo) GetPollListSearch(ctx context.Context, filter *PollSearchFilter) ([]*entity.Poll, error) {
 	var p []*entity.Poll
-	q := r.db.ModelContext(ctx, &p)
-	if len(filter.IDs) > 0 {
-		q = q.Where("poll.id IN (?)", pg.In(filter.IDs))
-	}
-	if filter.CreatedAt != nil {
-		q = q.Where("created_at >= ? AND created_at <= ?", filter.CreatedAt.From, filter.CreatedAt.To)
-	}
-	if filter.CreatorID != 0 {
-		q = q.Where("creator_id = ?", filter.CreatorID)
-	}
-	return p, q.Relation("Options").Select()
+	q := r.db.ModelContext(ctx, &p).Relation("Options")
+	filter.Apply(q)
+	return p, q.Select()
 }
 
 type VoteSearchFilter struct {

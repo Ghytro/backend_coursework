@@ -1,10 +1,12 @@
 package common
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
 	"github.com/biter777/countries"
+	"github.com/go-pg/pg/v10/orm"
 )
 
 func LogFatalErr(err error) {
@@ -55,4 +57,29 @@ func GetCountryByAlpha2(alpha2 string) *countries.Country {
 
 type Range[T any] struct {
 	From, To T
+}
+
+type PageData struct {
+	Page, PageSize int
+}
+
+type StringDataFilter struct {
+	Value    string
+	Likeness StrDataLikeness
+}
+
+type StrDataLikeness uint8
+
+const (
+	StrDataLikenessExact = iota
+	StrDataLikenessSubstr
+)
+
+func (l StringDataFilter) Apply(q *orm.Query, columnName string) {
+	switch l.Likeness {
+	case StrDataLikenessExact:
+		q.Where(fmt.Sprintf("%s = ?", columnName), l.Value)
+	case StrDataLikenessSubstr:
+		q.Where(fmt.Sprintf("position(%s in ?) > 0", columnName), l.Value)
+	}
 }
